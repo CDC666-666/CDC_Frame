@@ -26,6 +26,11 @@ typedef struct {
     uint32_t sequence;
 } can_service_submission_t;
 
+typedef struct {
+    can_service_tx_kind_t kind; /* NONE 表示尚未观察到成功发送。 */
+    uint32_t submission_sequence; /* 对应提交事件的序号，按 32 位回绕。 */
+} can_service_transmission_t;
+
 typedef struct can_service can_service_t;
 typedef void (*can_service_receive_fn)(void *context, const can_frame_t *frame);
 
@@ -38,6 +43,7 @@ typedef struct {
     uint64_t expires_us;
     can_service_tx_kind_t pending_kind;
     can_service_submission_t last_submission;
+    can_service_transmission_t last_transmission;
 } can_service_endpoint_t;
 
 struct can_service {
@@ -69,7 +75,7 @@ bool can_service_start(can_service_t *bus, uint32_t bitrate_hz, uint64_t now_us)
 /** @brief 采集总线状态并有界地分发反馈。now_us 使用板级单调时钟。 */
 void can_service_poll_rx(can_service_t *bus, uint64_t now_us);
 
-/** @brief 每轮至多提交一帧。失能优先，同级按实例轮转。 */
+/** @brief 每轮至多提交一帧，失能优先、同级轮转。SUBMITTED 表示硬件接受请求。 */
 can_service_result_t can_service_poll_tx(can_service_t *bus);
 
 /** @brief 复制待发帧。每个实例最多一帧，新运动帧覆盖旧运动帧。

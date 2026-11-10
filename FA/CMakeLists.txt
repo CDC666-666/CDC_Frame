@@ -53,14 +53,14 @@ if(FRAME_CDC_MOTOR_BENCH)
         base/devices/damiao/damiao_mit.c
         base/devices/damiao/damiao_motor.c
         base/protocols/operator/operator_input.c
-        app/single_motor_control/single_motor_control.c
+        app/motor_bench/motor_bench.c
     )
     target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         base/bsp
         base/devices/damiao
         base/services/can
         base/protocols/operator
-        app/single_motor_control
+        app/motor_bench
     )
 endif()
 if(NOT FRAME_CDC_MOTOR_BENCH OR NOT FRAME_CDC_MOTOR_TELEMETRY)

@@ -72,6 +72,12 @@ static void drop_unsafe_tx(can_service_t *bus)
 static void update_inflight(can_service_t *bus, uint64_t now_us)
 {
     if (!mc02_can_tx_pending(bus->port)) {
+        if (bus->inflight != NULL && mc02_can_tx_transmitted(bus->port)) {
+            bus->inflight->last_transmission = (can_service_transmission_t){
+                .kind = bus->inflight_kind,
+                .submission_sequence = bus->inflight->last_submission.sequence,
+            };
+        }
         bus->inflight = NULL;
         bus->inflight_kind = CAN_SERVICE_TX_NONE;
         bus->is_cancelling = false;
@@ -187,6 +193,10 @@ can_service_result_t can_service_poll_tx(can_service_t *bus)
         return bus->status == MC02_CAN_OK ? CAN_SERVICE_IDLE : CAN_SERVICE_BUS_FAULT;
     }
 
+    /* 等下一轮回收在途结果，避免新请求清除尚未读取的成功标志。 */
+    if (bus->inflight != NULL) {
+        return CAN_SERVICE_BUSY;
+    }
     can_service_endpoint_t *endpoint = &bus->endpoints[selected];
     switch (mc02_can_submit(bus->port, &endpoint->pending)) {
         case MC02_CAN_TX_BUSY:

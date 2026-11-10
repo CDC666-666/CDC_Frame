@@ -18,14 +18,24 @@ static void receive_feedback(void *context, const can_frame_t *frame)
     }
 }
 
-bool damiao_motor_register(damiao_motor_t *motor, can_service_t *bus,
-                           const damiao_mit_config_t *config)
+bool damiao_motor_init(damiao_motor_t *motor, can_service_t *bus, const damiao_mit_config_t *config)
 {
-    if (motor->endpoint != NULL || !damiao_mit_init(&motor->mit, config)) {
+    damiao_mit_t mit;
+    if (motor->endpoint != NULL || !damiao_mit_init(&mit, config)) {
         return false;
     }
-    motor->endpoint = can_service_register(bus, config->master_id, receive_feedback, motor);
-    return motor->endpoint != NULL;
+    can_service_endpoint_t *endpoint =
+        can_service_register(bus, config->master_id, receive_feedback, motor);
+    if (endpoint == NULL) {
+        return false;
+    }
+    *motor = (damiao_motor_t){.mit = mit, .endpoint = endpoint};
+    return true;
+}
+
+const damiao_mit_config_t *damiao_motor_motion_config(const damiao_motor_t *motor)
+{
+    return motor->endpoint != NULL && motor->mit.has_valid_ranges ? &motor->mit.config : NULL;
 }
 
 damiao_motor_output_t damiao_motor_output(const damiao_motor_t *motor, uint64_t now_us)
@@ -36,6 +46,8 @@ damiao_motor_output_t damiao_motor_output(const damiao_motor_t *motor, uint64_t 
         .status = damiao_mit_status(&motor->mit, now_us),
         .bus_status = endpoint != NULL ? endpoint->bus->status : MC02_CAN_NOT_READY,
         .submission = endpoint != NULL ? endpoint->last_submission : (can_service_submission_t){0},
+        .transmission =
+            endpoint != NULL ? endpoint->last_transmission : (can_service_transmission_t){0},
         .fault_count = motor->fault_count,
         .disabled_count = motor->disabled_count,
         .has_scaled_feedback = motor->mit.feedback.has_feedback && motor->mit.has_valid_ranges,

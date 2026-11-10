@@ -171,6 +171,12 @@ bool mc02_can_tx_pending(mc02_can_port_t port)
            HAL_FDCAN_IsTxBufferMessagePending(&s_fdcan, FDCAN_TX_BUFFER0) != 0U;
 }
 
+bool mc02_can_tx_transmitted(mc02_can_port_t port)
+{
+    return port == MC02_CAN_PORT_1 && s_is_started &&
+           (s_fdcan.Instance->TXBTO & FDCAN_TX_BUFFER0) != 0U;
+}
+
 mc02_can_tx_result_t mc02_can_submit(mc02_can_port_t port, const can_frame_t *frame)
 {
     if (port != MC02_CAN_PORT_1 || !s_is_started || (FDCAN1->PSR & FDCAN_PSR_BO) != 0U) {

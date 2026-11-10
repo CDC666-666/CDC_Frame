@@ -7,7 +7,7 @@
 #include "mc02_board.h"
 
 #ifdef FRAME_CDC_MOTOR_BENCH
-#include "single_motor_control.h"
+#include "motor_bench.h"
 #endif
 #ifdef FRAME_CDC_MOTOR_TELEMETRY
 #include "motor_telemetry.h"
@@ -23,9 +23,8 @@ static ins_t s_ins;
 #ifdef FRAME_CDC_MOTOR_BENCH
 static can_service_t s_can1;
 static damiao_motor_t s_motor;
-static single_motor_control_t s_control;
-static operator_input_t s_operator;
-static bool s_has_operator;
+static motor_bench_t s_bench;
+static int (*s_read_operator_byte)(void);
 
 static const uint32_t s_can1_bitrate_hz = 0U; /* 待读实物 CAN 波特率。 */
 static const damiao_mit_config_t s_motor_config = {
@@ -37,8 +36,8 @@ static const damiao_mit_config_t s_motor_config = {
     .feedback_timeout_us = 50000U,
 };
 
-static const single_motor_control_config_t s_control_config = {
-    .mode = SINGLE_MOTOR_FEEDBACK,
+static const motor_bench_config_t s_bench_config = {
+    .mode = MOTOR_BENCH_FEEDBACK,
     .has_status_request = false, /* 核对固件支持 0x7FF/0xCC 后开启。 */
     .control_period_us = 10000U,
     .attitude_timeout_us = 25000U,
@@ -72,12 +71,12 @@ void frame_system_init(void)
     ins_init(&s_ins);
 #ifdef FRAME_CDC_MOTOR_BENCH
     can_service_init(&s_can1, MC02_CAN_PORT_1);
-    const bool is_registered = damiao_motor_register(&s_motor, &s_can1, &s_motor_config);
+    const bool is_motor_ready = damiao_motor_init(&s_motor, &s_can1, &s_motor_config);
     const uint64_t now_us = mc02_board_time_us();
-    const bool is_started = is_registered && can_service_start(&s_can1, s_can1_bitrate_hz, now_us);
-    single_motor_control_init(&s_control, &s_motor, &s_control_config, now_us);
-    s_has_operator = is_started && s_control.can_move;
-    if (s_has_operator) {
+    const bool is_started = is_motor_ready && can_service_start(&s_can1, s_can1_bitrate_hz, now_us);
+    motor_bench_init(&s_bench, &s_motor, &s_bench_config, now_us);
+    s_read_operator_byte = is_started && s_bench.can_move ? mc02_board_uart_read : NULL;
+    if (s_read_operator_byte != NULL) {
         mc02_board_uart_enable_rx();
     }
 #endif
@@ -103,14 +102,13 @@ void frame_system_poll(void)
 #ifdef FRAME_CDC_MOTOR_BENCH
     const uint64_t control_now_us = mc02_board_time_us();
     const operator_command_t command =
-        s_has_operator ? operator_input_poll(&s_operator, control_now_us, mc02_board_uart_read)
-                       : OPERATOR_COMMAND_NONE;
-    single_motor_control_update(&s_control, &s_ins.output, command, control_now_us);
+        motor_bench_poll_operator(&s_bench, control_now_us, s_read_operator_byte);
+    motor_bench_update(&s_bench, &s_ins.output, command, control_now_us);
     /* 提交事件由 CAN 服务记录，下轮控制再消费。 */
     (void)can_service_poll_tx(&s_can1);
 #endif
 #ifdef FRAME_CDC_MOTOR_TELEMETRY
-    motor_telemetry_update(&s_telemetry, &s_control.output, &s_imu.output, control_now_us);
+    motor_telemetry_update(&s_telemetry, &s_bench.output, &s_imu.output, control_now_us);
 #else
     imu_telemetry_update(&s_telemetry, &s_imu.output, &s_ins.output, sample_now_us);
 #endif

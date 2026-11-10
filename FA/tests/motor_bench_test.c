@@ -5,10 +5,10 @@
 
 #include "mc02_board.h"
 #include "motor_telemetry.h"
-#include "single_motor_control.h"
+#include "motor_bench.h"
 
 static const damiao_mit_config_t s_motor = {1U, 0x11U, 12.5, 10.0, 6.0, 50000U};
-static const single_motor_control_config_t s_control_config = {
+static const motor_bench_config_t s_control_config = {
     .has_status_request = true,
     .control_period_us = 10000U,
     .attitude_timeout_us = 25000U,
@@ -23,12 +23,13 @@ static const single_motor_control_config_t s_control_config = {
 };
 static can_service_t s_can1;
 static damiao_motor_t s_bound_motor;
-static single_motor_control_t s_control;
-static operator_input_t s_operator;
+static motor_bench_t s_control;
 static uint64_t s_now_us;
 static mc02_can_status_t s_bus;
 static bool s_has_tx;
 static bool s_tx_pending;
+static bool s_tx_transmitted;
+static bool s_finish_after_pending_read;
 static bool s_fail_submit;
 static can_frame_t s_rx[MC02_CAN_RX_DEPTH];
 static size_t s_rx_count;
@@ -96,7 +97,20 @@ void mc02_can_discard_rx(mc02_can_port_t port)
 bool mc02_can_tx_pending(mc02_can_port_t port)
 {
     assert(port == MC02_CAN_PORT_1);
-    return s_tx_pending;
+    const bool was_pending = s_tx_pending;
+    if (s_finish_after_pending_read) {
+        assert(was_pending);
+        s_finish_after_pending_read = false;
+        s_tx_pending = false;
+        s_tx_transmitted = true;
+    }
+    return was_pending;
+}
+
+bool mc02_can_tx_transmitted(mc02_can_port_t port)
+{
+    assert(port == MC02_CAN_PORT_1 && !s_tx_pending);
+    return s_tx_transmitted;
 }
 
 mc02_can_tx_result_t mc02_can_submit(mc02_can_port_t port, const can_frame_t *frame)
@@ -111,6 +125,7 @@ mc02_can_tx_result_t mc02_can_submit(mc02_can_port_t port, const can_frame_t *fr
     s_tx = *frame;
     s_has_tx = true;
     s_tx_pending = true;
+    s_tx_transmitted = false;
     return MC02_CAN_TX_SUBMITTED;
 }
 
@@ -199,15 +214,15 @@ static void receive(uint16_t id, uint8_t motor_id, uint8_t state, uint64_t time_
     };
 }
 
-static void init_control(single_motor_mode_t mode)
+static void init_control(motor_bench_mode_t mode)
 {
     can_service_init(&s_can1, MC02_CAN_PORT_1);
-    assert(damiao_motor_register(&s_bound_motor, &s_can1, &s_motor));
+    assert(damiao_motor_init(&s_bound_motor, &s_can1, &s_motor));
     assert(can_service_start(&s_can1, 500000U, 0U));
     assert(s_filter_count == 1U && s_filter_ids[0] == 0x11U);
-    single_motor_control_config_t config = s_control_config;
+    motor_bench_config_t config = s_control_config;
     config.mode = mode;
-    single_motor_control_init(&s_control, &s_bound_motor, &config, 0U);
+    motor_bench_init(&s_control, &s_bound_motor, &config, 0U);
 }
 
 static void poll(uint64_t now_us, int state, const char *command, double pitch_rad, bool is_fresh)
@@ -232,10 +247,12 @@ static void poll(uint64_t now_us, int state, const char *command, double pitch_r
     };
     can_service_poll_rx(&s_can1, now_us);
     const operator_command_t operation =
-        operator_input_poll(&s_operator, now_us, mc02_board_uart_read);
-    single_motor_control_update(&s_control, &pose, operation, now_us);
+        motor_bench_poll_operator(&s_control, now_us, mc02_board_uart_read);
+    motor_bench_update(&s_control, &pose, operation, now_us);
     (void)can_service_poll_tx(&s_can1);
-    s_tx_pending = false; /* 单电机回归中，发送在相邻轮次之间完成。 */
+    /* 单电机回归中，发送在相邻轮次之间完成。 */
+    s_tx_transmitted = s_has_tx;
+    s_tx_pending = false;
 }
 
 static void expect_action(uint8_t action)
@@ -245,18 +262,23 @@ static void expect_action(uint8_t action)
     assert(memcmp(s_tx.data, prefix, 7U) == 0 && s_tx.data[7] == action);
 }
 
-static void expect_speed(double speed_rad_s)
+static void expect_motor_speed(uint16_t motor_id, double speed_rad_s)
 {
-    assert(s_has_tx && s_tx.id == 1U && s_tx.length == 8U);
+    assert(s_has_tx && s_tx.id == motor_id && s_tx.length == 8U);
     const unsigned int raw = ((unsigned int)s_tx.data[2] << 4) | (s_tx.data[3] >> 4);
     assert(raw == (unsigned int)((speed_rad_s + 10.0) / 20.0 * 4095.0));
     assert((s_tx.data[3] & 0xFU) == 0U && s_tx.data[4] == 0U);
     assert(s_tx.data[5] == 5U && s_tx.data[6] == 0x17U && s_tx.data[7] == 0xFFU);
 }
 
+static void expect_speed(double speed_rad_s)
+{
+    expect_motor_speed(1U, speed_rad_s);
+}
+
 static void test_motion(bool is_fixed)
 {
-    init_control(is_fixed ? SINGLE_MOTOR_FIXED_SPEED : SINGLE_MOTOR_PITCH_SPEED);
+    init_control(is_fixed ? MOTOR_BENCH_FIXED_SPEED : MOTOR_BENCH_PITCH_SPEED);
     poll(1000U, -1, "arm\n", 0.3, true);
     expect_action(0xFDU);
     poll(2000U, 0, "", 0.3, true);
@@ -281,7 +303,7 @@ static void test_motion(bool is_fixed)
     expect_speed(is_fixed ? 0.02 : 0.0);
     poll(65000U, 1, is_fixed ? "disable\n" : "", 0.3, false);
     expect_action(0xFDU);
-    assert(s_control.output.state == SINGLE_MOTOR_STOPPING);
+    assert(s_control.output.state == MOTOR_BENCH_STOPPING);
 
     poll(67000U, 0, "", 0.3, true);
     poll(68000U, 0, "run\n", 0.3, true);
@@ -310,7 +332,7 @@ static void test_motion(bool is_fixed)
     expect_speed(0.0);
     s_bus = MC02_CAN_BUS_OFF;
     poll(128000U, -1, "", 0.3, true);
-    assert(!s_has_tx && s_control.output.state == SINGLE_MOTOR_STOPPING);
+    assert(!s_has_tx && s_control.output.state == MOTOR_BENCH_STOPPING);
     s_bus = MC02_CAN_OK;
     poll(129000U, -1, "run\n", 0.3, true);
     expect_action(0xFDU);
@@ -323,27 +345,27 @@ static void test_motion(bool is_fixed)
 
 static void test_submission_confirmation(void)
 {
-    init_control(SINGLE_MOTOR_FIXED_SPEED);
+    init_control(MOTOR_BENCH_FIXED_SPEED);
     s_tx_pending = true;
     poll(1000U, -1, "", 0.0, true);
-    assert(!s_has_tx && s_control.output.state == SINGLE_MOTOR_STOPPING);
+    assert(!s_has_tx && s_control.output.state == MOTOR_BENCH_STOPPING);
     poll(2000U, 0, "", 0.0, true);
     expect_action(0xFDU);
     poll(2100U, -1, "", 0.0, true);
-    assert(!s_has_tx && s_control.output.state == SINGLE_MOTOR_STOPPING);
+    assert(!s_has_tx && s_control.output.state == MOTOR_BENCH_STOPPING);
     poll(3000U, 0, "", 0.0, true);
-    assert(s_control.output.state == SINGLE_MOTOR_DISARMED);
+    assert(s_control.output.state == MOTOR_BENCH_DISARMED);
 
     s_tx_pending = true;
     poll(4000U, 0, "arm\n", 0.0, true);
-    assert(!s_has_tx && s_control.output.state == SINGLE_MOTOR_ARMING);
+    assert(!s_has_tx && s_control.output.state == MOTOR_BENCH_ARMING);
     poll(5000U, 1, "", 0.0, true);
     expect_action(0xFCU);
     poll(6000U, -1, "", 0.0, true);
-    assert(!s_has_tx && s_control.output.state == SINGLE_MOTOR_ARMING);
+    assert(!s_has_tx && s_control.output.state == MOTOR_BENCH_ARMING);
     poll(7000U, 1, "", 0.0, true);
     expect_speed(0.0);
-    assert(s_control.output.state == SINGLE_MOTOR_ARMED);
+    assert(s_control.output.state == MOTOR_BENCH_ARMED);
 }
 
 static void test_registration(void)
@@ -351,8 +373,8 @@ static void test_registration(void)
     can_service_t bus;
     damiao_motor_t motors[MC02_CAN_FILTER_CAPACITY + 1U] = {0};
     can_service_init(&bus, MC02_CAN_PORT_1);
-    assert(damiao_motor_register(&motors[0], &bus, &s_motor));
-    assert(!damiao_motor_register(&motors[1], &bus, &s_motor));
+    assert(damiao_motor_init(&motors[0], &bus, &s_motor));
+    assert(!damiao_motor_init(&motors[1], &bus, &s_motor));
     assert(!can_service_start(&bus, 500000U, 0U));
     assert(s_init_count == 0U);
 
@@ -362,11 +384,11 @@ static void test_registration(void)
         damiao_mit_config_t config = s_motor;
         config.motor_id += (uint16_t)i;
         config.master_id += (uint16_t)i;
-        assert(damiao_motor_register(&motors[i], &bus, &config));
+        assert(damiao_motor_init(&motors[i], &bus, &config));
     }
     damiao_mit_config_t overflow = s_motor;
     overflow.master_id = 0x30U;
-    assert(!damiao_motor_register(&motors[MC02_CAN_FILTER_CAPACITY], &bus, &overflow));
+    assert(!damiao_motor_init(&motors[MC02_CAN_FILTER_CAPACITY], &bus, &overflow));
     assert(!can_service_start(&bus, 500000U, 0U));
     assert(s_init_count == 0U);
 }
@@ -381,13 +403,19 @@ static void test_two_motors(void)
     second_config.motor_id = 2U;
     second_config.master_id = 0x12U;
     can_service_init(&bus, MC02_CAN_PORT_1);
-    assert(damiao_motor_register(&first, &bus, &s_motor));
-    assert(damiao_motor_register(&second, &bus, &second_config));
+    assert(damiao_motor_init(&first, &bus, &s_motor));
+    assert(damiao_motor_init(&second, &bus, &second_config));
+    assert(!damiao_motor_init(&first, &bus, &second_config));
+    assert(damiao_motor_motion_config(&first)->motor_id == 1U);
+    assert(damiao_motor_motion_config(&second)->motor_id == 2U);
+    assert(!s_has_tx && s_init_count == 0U);
     assert(can_service_start(&bus, 500000U, 0U));
     assert(!can_service_start(&bus, 500000U, 0U));
     assert(s_init_count == 1U && s_filter_count == 2U && s_filter_ids[0] == 0x11U &&
            s_filter_ids[1] == 0x12U);
 
+    const damiao_mit_command_t second_target = {.speed_rad_s = -0.5, .kd_n_m_s_per_rad = 0.1};
+    assert(damiao_motor_command(&second, &second_target, 0U, 11000U) == CAN_SERVICE_INVALID);
     receive(0x12U, 2U, 1U, 500U);
     receive(0x11U, 1U, 1U, 600U);
     receive(0x12U, 1U, 0xDU, 700U); /* 反馈地址正确，帧内设备 ID 错误。 */
@@ -403,8 +431,7 @@ static void test_two_motors(void)
     assert(damiao_motor_command(&first, &command, s_now_us, 11000U) == CAN_SERVICE_QUEUED);
     command.speed_rad_s = 0.5;
     assert(damiao_motor_command(&first, &command, s_now_us, 11000U) == CAN_SERVICE_QUEUED);
-    command.speed_rad_s = -0.5;
-    assert(damiao_motor_command(&second, &command, s_now_us, 11000U) == CAN_SERVICE_QUEUED);
+    assert(damiao_motor_command(&second, &second_target, s_now_us, 11000U) == CAN_SERVICE_QUEUED);
     assert(can_service_poll_tx(&bus) == CAN_SERVICE_BUSY);
     assert(damiao_motor_output(&first, s_now_us).submission.sequence == 0U);
     assert(damiao_motor_output(&second, s_now_us).submission.sequence == 0U);
@@ -413,30 +440,53 @@ static void test_two_motors(void)
     s_now_us = 2000U;
     assert(can_service_poll_tx(&bus) == CAN_SERVICE_SUBMITTED);
     expect_speed(0.5);
-    assert(damiao_motor_output(&first, s_now_us).submission.time_us == 2000U);
+    const damiao_motor_output_t first_submitted = damiao_motor_output(&first, s_now_us);
+    assert(first_submitted.submission.time_us == 2000U);
+    assert(first_submitted.transmission.kind == CAN_SERVICE_TX_NONE);
+    /* 缓冲在读取 pending 之后才空闲，服务要先回收发送结果。 */
+    s_finish_after_pending_read = true;
+    assert(can_service_poll_tx(&bus) == CAN_SERVICE_BUSY);
+    assert(damiao_motor_output(&second, s_now_us).submission.kind == CAN_SERVICE_TX_NONE);
     assert(damiao_motor_action(&second, DAMIAO_MIT_DISABLE, UINT64_MAX) == CAN_SERVICE_QUEUED);
-    assert(s_cancel_count == 0U && can_service_poll_tx(&bus) == CAN_SERVICE_BUSY);
+    assert(s_cancel_count == 0U);
     assert(damiao_motor_command(&second, &command, s_now_us, 11000U) == CAN_SERVICE_BUSY);
     s_tx_pending = false;
     s_now_us = 3000U;
     assert(can_service_poll_tx(&bus) == CAN_SERVICE_SUBMITTED);
     assert(s_tx.id == 2U && s_tx.data[7] == 0xFDU);
     assert(damiao_motor_output(&second, s_now_us).submission.time_us == 3000U);
+    const can_service_transmission_t first_sent =
+        damiao_motor_output(&first, s_now_us).transmission;
+    assert(first_sent.kind == CAN_SERVICE_TX_MOTION);
+    assert(first_sent.submission_sequence == first_submitted.submission.sequence);
     s_tx_pending = false;
     assert(can_service_poll_tx(&bus) == CAN_SERVICE_IDLE);
 
     command.speed_rad_s = 0.75;
     assert(damiao_motor_command(&first, &command, s_now_us, 11000U) == CAN_SERVICE_QUEUED);
     assert(can_service_poll_tx(&bus) == CAN_SERVICE_SUBMITTED);
-    assert(damiao_motor_command(&second, &command, s_now_us, 11000U) == CAN_SERVICE_QUEUED);
+    assert(damiao_motor_command(&second, &second_target, s_now_us, 11000U) == CAN_SERVICE_QUEUED);
     assert(damiao_motor_action(&first, DAMIAO_MIT_DISABLE, UINT64_MAX) == CAN_SERVICE_QUEUED);
     assert(s_cancel_count == 1U && can_service_poll_tx(&bus) == CAN_SERVICE_BUSY);
     s_tx_pending = false;
     assert(can_service_poll_tx(&bus) == CAN_SERVICE_SUBMITTED);
     expect_action(0xFDU);
+    assert(damiao_motor_output(&first, s_now_us).transmission.submission_sequence ==
+           first_sent.submission_sequence); /* 取消的运动帧没有发送确认。 */
     s_tx_pending = false;
-    assert(can_service_poll_tx(&bus) == CAN_SERVICE_SUBMITTED && s_tx.id == 2U);
+    assert(can_service_poll_tx(&bus) == CAN_SERVICE_SUBMITTED);
+    expect_motor_speed(2U, -0.5);
+    const damiao_motor_output_t second_submitted = damiao_motor_output(&second, s_now_us);
+    assert(second_submitted.transmission.kind == CAN_SERVICE_TX_NONE);
     s_tx_pending = false;
+    s_tx_transmitted = true;
+    assert(can_service_poll_tx(&bus) == CAN_SERVICE_IDLE);
+    const can_service_transmission_t second_sent =
+        damiao_motor_output(&second, s_now_us).transmission;
+    assert(second_sent.kind == CAN_SERVICE_TX_MOTION);
+    assert(second_sent.submission_sequence == second_submitted.submission.sequence);
+    assert(damiao_motor_output(&first, s_now_us).transmission.submission_sequence ==
+           first_sent.submission_sequence);
 
     /* A 的待发目标到期时，B 刚收到反馈且仍可发送。 */
     assert(damiao_motor_command(&first, &command, s_now_us, 60000U) == CAN_SERVICE_QUEUED);
@@ -489,7 +539,7 @@ static void test_motor_telemetry(void)
 {
     motor_telemetry_t telemetry;
     motor_telemetry_init(&telemetry, 1000U);
-    const single_motor_control_output_t control = {
+    const motor_bench_output_t control = {
         .motor =
             {
                 .feedback =
@@ -507,7 +557,7 @@ static void test_motor_telemetry(void)
             },
         .pitch_rad = 0.125,
         .target_speed_rad_s = -0.5,
-        .state = SINGLE_MOTOR_ARMED,
+        .state = MOTOR_BENCH_ARMED,
         .is_pitch_valid = true,
     };
     const imu_observer_output_t imu = {.sample_dt_s = 0.005, .missed_samples = 3U};
@@ -533,13 +583,15 @@ int main(int argc, char *argv[])
     assert(argc == 2);
     test_codec();
     if (strcmp(argv[1], "feedback") == 0) {
-        init_control(SINGLE_MOTOR_FEEDBACK);
+        init_control(MOTOR_BENCH_FEEDBACK);
         poll(1000U, -1, "arm\n", 0.0, true);
         assert(s_has_tx && s_tx.id == 0x7FFU && s_tx.data[2] == 0xCCU);
         poll(2000U, 0, "run\n", 0.0, true);
         assert(!s_has_tx);
     } else if (strcmp(argv[1], "two") == 0) {
         test_two_motors();
+        puts("MIT codec and two independent device instances passed");
+        return 0;
     } else if (strcmp(argv[1], "submission") == 0) {
         test_submission_confirmation();
     } else {

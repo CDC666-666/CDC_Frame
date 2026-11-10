@@ -11,7 +11,7 @@ void motor_telemetry_init(motor_telemetry_t *telemetry, uint64_t first_frame_us)
     telemetry->next_frame_us = first_frame_us;
 }
 
-static void submit_frame(motor_telemetry_t *telemetry, const single_motor_control_output_t *control,
+static void submit_frame(motor_telemetry_t *telemetry, const motor_bench_output_t *control,
                          const imu_observer_output_t *imu)
 {
     if (telemetry->offset != sizeof(telemetry->frame)) {
@@ -25,7 +25,7 @@ static void submit_frame(motor_telemetry_t *telemetry, const single_motor_contro
                 (float)control->target_speed_rad_s,
                 (float)motor->feedback.speed_rad_s,
                 (float)motor->status,
-                control->state == SINGLE_MOTOR_ARMED ? 1.0f : 0.0f,
+                control->state == MOTOR_BENCH_ARMED ? 1.0f : 0.0f,
                 (float)motor->feedback.state_raw,
                 (float)motor->bus_status,
                 (float)control->state,
@@ -43,8 +43,7 @@ static void submit_frame(motor_telemetry_t *telemetry, const single_motor_contro
     telemetry->offset = 0U;
 }
 
-void motor_telemetry_update(motor_telemetry_t *telemetry,
-                            const single_motor_control_output_t *control,
+void motor_telemetry_update(motor_telemetry_t *telemetry, const motor_bench_output_t *control,
                             const imu_observer_output_t *imu, uint64_t now_us)
 {
     if (now_us >= telemetry->next_frame_us) {

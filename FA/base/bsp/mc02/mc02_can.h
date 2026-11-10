@@ -47,6 +47,9 @@ void mc02_can_discard_rx(mc02_can_port_t port);
 /** @brief 检查唯一发送缓冲是否仍挂起。硬件在请求撤销期间也可能保持挂起。 */
 bool mc02_can_tx_pending(mc02_can_port_t port);
 
+/** @brief 查询唯一缓冲最近一次请求的发送成功标志。提交下一帧前读取。 */
+bool mc02_can_tx_transmitted(mc02_can_port_t port);
+
 /** @brief 非阻塞提交 Classic 标准数据帧。已提交只表示硬件接受请求。 */
 mc02_can_tx_result_t mc02_can_submit(mc02_can_port_t port, const can_frame_t *frame);
 
