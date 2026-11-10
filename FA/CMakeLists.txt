@@ -45,26 +45,26 @@ if(FRAME_CDC_MOTOR_BENCH)
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE FRAME_CDC_MOTOR_BENCH)
     if(FRAME_CDC_MOTOR_TELEMETRY)
         target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE FRAME_CDC_MOTOR_TELEMETRY)
-        target_sources(${CMAKE_PROJECT_NAME} PRIVATE Components/protocols/telemetry/motor_telemetry.c)
+        target_sources(${CMAKE_PROJECT_NAME} PRIVATE app/telemetry/motor_telemetry.c)
     endif()
     target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-        BSP/mc02/mc02_can.c
-        Components/services/can/can_service.c
-        Components/devices/damiao/damiao_mit.c
-        Components/devices/damiao/damiao_motor.c
-        Components/protocols/operator/operator_input.c
+        base/bsp/mc02/mc02_can.c
+        base/services/can/can_service.c
+        base/devices/damiao/damiao_mit.c
+        base/devices/damiao/damiao_motor.c
+        base/protocols/operator/operator_input.c
         app/single_motor_control/single_motor_control.c
     )
     target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-        BSP
-        Components/devices/damiao
-        Components/services/can
-        Components/protocols/operator
+        base/bsp
+        base/devices/damiao
+        base/services/can
+        base/protocols/operator
         app/single_motor_control
     )
 endif()
 if(NOT FRAME_CDC_MOTOR_BENCH OR NOT FRAME_CDC_MOTOR_TELEMETRY)
-    target_sources(${CMAKE_PROJECT_NAME} PRIVATE Components/protocols/telemetry/imu_telemetry.c)
+    target_sources(${CMAKE_PROJECT_NAME} PRIVATE app/telemetry/imu_telemetry.c)
 endif()
 
 # Link directories setup
@@ -74,22 +74,26 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    BSP/mc02/mc02_board.c
-    Components/devices/bmi088/bmi088.c
-    Components/devices/imu/imu_device.c
-    Components/algorithms/attitude/attitude.c
-    system/frame_system.c
+    base/bsp/mc02/mc02_board.c
+    base/devices/bmi088/bmi088.c
+    app/imu/imu_observer.c
+    app/ins/ins.c
+    base/protocols/telemetry/telemetry_encoding.c
+    algorithm/attitude/attitude.c
+    app/assembly/frame_system.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    BSP/mc02
-    Components/devices/bmi088
-    Components/devices/imu
-    Components/algorithms/attitude
-    Components/algorithms/common
-    Components/protocols/telemetry
-    system
+    base/bsp/mc02
+    base/devices/bmi088
+    app/imu
+    app/ins
+    app/telemetry
+    algorithm/attitude
+    algorithm/common
+    base/protocols/telemetry
+    app/assembly
 )
 
 # Add project symbols (macros)

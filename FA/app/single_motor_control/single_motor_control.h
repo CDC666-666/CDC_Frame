@@ -1,8 +1,8 @@
 #ifndef FRAME_CDC_APP_SINGLE_MOTOR_CONTROL_SINGLE_MOTOR_CONTROL_H
 #define FRAME_CDC_APP_SINGLE_MOTOR_CONTROL_SINGLE_MOTOR_CONTROL_H
 
-#include "attitude.h"
 #include "damiao_motor.h"
+#include "ins.h"
 #include "operator_input.h"
 
 typedef enum {

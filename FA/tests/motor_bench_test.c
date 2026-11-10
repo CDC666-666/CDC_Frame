@@ -231,8 +231,9 @@ static void poll(uint64_t now_us, int state, const char *command, double pitch_r
         .is_sample_valid = true,
     };
     can_service_poll_rx(&s_can1, now_us);
-    single_motor_control_update(&s_control, &pose, operator_input_poll(&s_operator, now_us),
-                                now_us);
+    const operator_command_t operation =
+        operator_input_poll(&s_operator, now_us, mc02_board_uart_read);
+    single_motor_control_update(&s_control, &pose, operation, now_us);
     (void)can_service_poll_tx(&s_can1);
     s_tx_pending = false; /* 单电机回归中，发送在相邻轮次之间完成。 */
 }
@@ -487,8 +488,8 @@ static void test_two_motors(void)
 static void test_motor_telemetry(void)
 {
     motor_telemetry_t telemetry;
-    motor_telemetry_init(&telemetry);
-    const motor_telemetry_snapshot_t snapshot = {
+    motor_telemetry_init(&telemetry, 1000U);
+    const single_motor_control_output_t control = {
         .motor =
             {
                 .feedback =
@@ -506,17 +507,16 @@ static void test_motor_telemetry(void)
             },
         .pitch_rad = 0.125,
         .target_speed_rad_s = -0.5,
-        .imu_sample_dt_s = 0.005,
-        .imu_missed_samples = 3U,
-        .bench_state = 2U,
-        .is_armed = true,
+        .state = SINGLE_MOTOR_ARMED,
         .is_pitch_valid = true,
     };
-    motor_telemetry_submit(&telemetry, &snapshot);
-    motor_telemetry_poll(&telemetry);
-    motor_telemetry_poll(&telemetry);
+    const imu_observer_output_t imu = {.sample_dt_s = 0.005, .missed_samples = 3U};
+    motor_telemetry_update(&telemetry, &control, &imu, 999U);
+    assert(s_telemetry_count == 0U);
+    motor_telemetry_update(&telemetry, &control, &imu, 1000U);
+    motor_telemetry_update(&telemetry, &control, &imu, 20999U);
     assert(s_telemetry_count == 1U);
-    const float expected[] = {0.125f, -0.5f, 2.0f,   4.0f, 1.0f,  13.0f, 3.0f,  2.0f,
+    const float expected[] = {0.125f, -0.5f, 2.0f,   4.0f, 1.0f,  13.0f, 3.0f,  3.0f,
                               1.0f,   1.0f,  0.005f, 3.0f, 1.25f, -2.0f, 42.0f, 57.0f};
     for (size_t i = 0U; i < sizeof(expected) / sizeof(expected[0]); ++i) {
         const uint8_t *bytes = &s_wire[4U + 4U * i];

@@ -2,7 +2,6 @@
 #define FRAME_CDC_ALGORITHMS_ATTITUDE_ATTITUDE_H
 
 #include <stdbool.h>
-#include <stdint.h>
 
 typedef enum {
     ATTITUDE_STATUS_OK = 0,
@@ -23,12 +22,6 @@ typedef struct {
     attitude_status_t status;
     bool is_initialized;
 } attitude_t;
-
-typedef struct {
-    attitude_t attitude;
-    uint64_t sample_time_us; /* 板级单调微秒。 */
-    bool is_sample_valid;
-} attitude_sample_t;
 
 /** @brief 将非空估计器初始化为单位四元数和等待状态。 */
 void attitude_init(attitude_t *attitude);

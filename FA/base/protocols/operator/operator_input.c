@@ -3,8 +3,6 @@
 
 #include <string.h>
 
-#include "mc02_board.h"
-
 #define OPERATOR_INPUT_TIMEOUT_US 1000000U
 
 static operator_command_t parse_command(const operator_input_t *input)
@@ -26,13 +24,14 @@ static operator_command_t parse_command(const operator_input_t *input)
     return OPERATOR_COMMAND_NONE;
 }
 
-operator_command_t operator_input_poll(operator_input_t *input, uint64_t now_us)
+operator_command_t operator_input_poll(operator_input_t *input, uint64_t now_us,
+                                       int (*read_byte)(void))
 {
     if (input->size > 0U && now_us - input->last_byte_us >= OPERATOR_INPUT_TIMEOUT_US) {
         input->is_invalid = true;
     }
     for (size_t i = 0U; i < 16U; ++i) {
-        const int byte = mc02_board_uart_read();
+        const int byte = read_byte();
         if (byte == -1) {
             break;
         }
