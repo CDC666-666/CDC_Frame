@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "MC02 · 断点调试（Cortex-Debug）",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/Debug/MC02.elf",
+            "preLaunchTask": "MC02 · 编译 Debug",
+            "armToolchainPath": "D:/Apps/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin",
+            "serverpath": "D:/Apps/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+            "searchDir": [
+                "D:/Apps/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/openocd/scripts"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+                "source [find interface/cmsis-dap.cfg]",
+                "transport select swd"
+            ],
+            "configFiles": [
+                "target/stm32h7x.cfg"
+            ],
+            "openOCDLaunchCommands": [
+                "adapter speed 1000"
+            ],
+            "breakAfterReset": false
+        }
+    ]
+}
