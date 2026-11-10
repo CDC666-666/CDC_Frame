@@ -37,6 +37,36 @@ add_executable(${CMAKE_PROJECT_NAME})
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
 
+option(FRAME_CDC_MOTOR_BENCH "Run the CAN1 MIT motor bench application" OFF)
+option(FRAME_CDC_MOTOR_TELEMETRY "Use motor telemetry on UART7 in bench builds" ON)
+if(FRAME_CDC_MOTOR_BENCH)
+    target_compile_definitions(stm32cubemx INTERFACE HAL_FDCAN_MODULE_ENABLED HSE_VALUE=24000000UL)
+    target_sources(STM32_Drivers PRIVATE Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_fdcan.c)
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE FRAME_CDC_MOTOR_BENCH)
+    if(FRAME_CDC_MOTOR_TELEMETRY)
+        target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE FRAME_CDC_MOTOR_TELEMETRY)
+        target_sources(${CMAKE_PROJECT_NAME} PRIVATE Components/protocols/telemetry/motor_telemetry.c)
+    endif()
+    target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+        BSP/mc02/mc02_can.c
+        Components/services/can/can_service.c
+        Components/devices/damiao/damiao_mit.c
+        Components/devices/damiao/damiao_motor.c
+        Components/protocols/operator/operator_input.c
+        app/single_motor_control/single_motor_control.c
+    )
+    target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+        BSP
+        Components/devices/damiao
+        Components/services/can
+        Components/protocols/operator
+        app/single_motor_control
+    )
+endif()
+if(NOT FRAME_CDC_MOTOR_BENCH OR NOT FRAME_CDC_MOTOR_TELEMETRY)
+    target_sources(${CMAKE_PROJECT_NAME} PRIVATE Components/protocols/telemetry/imu_telemetry.c)
+endif()
+
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined library search paths
@@ -44,19 +74,22 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    platform/mc02/mc02_board.c
-    devices/bmi088/bmi088.c
-    algorithms/attitude/attitude.c
-    app/imu/imu_app.c
-    app/imu/imu_telemetry.c
+    BSP/mc02/mc02_board.c
+    Components/devices/bmi088/bmi088.c
+    Components/devices/imu/imu_device.c
+    Components/algorithms/attitude/attitude.c
+    system/frame_system.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    platform/mc02
-    devices/bmi088
-    algorithms/attitude
-    app/imu
+    BSP/mc02
+    Components/devices/bmi088
+    Components/devices/imu
+    Components/algorithms/attitude
+    Components/algorithms/common
+    Components/protocols/telemetry
+    system
 )
 
 # Add project symbols (macros)

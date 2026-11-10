@@ -1,0 +1,222 @@
+{
+  "version": 3,
+  "global": {
+    "connType": "serial",
+    "serialBaud": "115200",
+    "serialData": "8",
+    "serialStop": "1",
+    "serialParity": "none",
+    "channelsCount": "21",
+    "dataType": "float32",
+    "endianness": "little",
+    "enableHeader": true,
+    "headerHex": "A5 5A 49 4D",
+    "enableFooter": true,
+    "footerHex": "00 00 80 7F",
+    "enableChecksum": false,
+    "maxPoints": "9000",
+    "plotWindowPoints": "1000",
+    "captureMemoryMiB": 128,
+    "channelNames": [
+      "q_w",
+      "q_x",
+      "q_y",
+      "q_z",
+      "accel_x_m_s2",
+      "accel_y_m_s2",
+      "accel_z_m_s2",
+      "gyro_x_rad_s",
+      "gyro_y_rad_s",
+      "gyro_z_rad_s",
+      "temperature_deg_c",
+      "sample_dt_s",
+      "sample_valid",
+      "attitude_status",
+      "bmi088_status",
+      "sample_sequence",
+      "sample_time_s",
+      "missed_samples",
+      "dropped_frames",
+      "accel_init_status",
+      "gyro_init_status"
+    ],
+    "channelColors": [
+      "#218dff",
+      "#ff5e57",
+      "#31b278",
+      "#ad71ed",
+      "#ff5e57",
+      "#31b278",
+      "#218dff",
+      "#ff5e57",
+      "#31b278",
+      "#218dff",
+      "#f59e0b",
+      "#31b278",
+      "#31b278",
+      "#218dff",
+      "#ff5e57",
+      "#218dff",
+      "#ad71ed",
+      "#f59e0b",
+      "#ff5e57",
+      "#ad71ed",
+      "#e284bf"
+    ]
+  },
+  "widgets": [
+    {
+      "id": "body_pose",
+      "type": "pose",
+      "title": "机体姿态 · body 相对于 odom",
+      "settings": {
+        "representation": "quaternion",
+        "inputDirection": "body-to-odom",
+        "quaternion": {
+          "order": "wxyz",
+          "normalize": true
+        },
+        "bindings": {
+          "quaternion": [
+            0,
+            1,
+            2,
+            3
+          ]
+        }
+      }
+    },
+    {
+      "id": "quaternion",
+      "type": "wave",
+      "title": "姿态四元数 · wxyz",
+      "settings": {
+        "channels": [
+          {"visible": true},
+          {"visible": true},
+          {"visible": true},
+          {"visible": true}
+        ]
+      }
+    },
+    {
+      "id": "accel",
+      "type": "wave",
+      "title": "机体加速度 · m/s²",
+      "settings": {
+        "channels": [
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": true},
+          {"visible": true},
+          {"visible": true}
+        ]
+      }
+    },
+    {
+      "id": "gyro",
+      "type": "wave",
+      "title": "机体角速度 · rad/s",
+      "settings": {
+        "channels": [
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": true},
+          {"visible": true},
+          {"visible": true}
+        ]
+      }
+    },
+    {
+      "id": "temp",
+      "type": "wave",
+      "title": "BMI088 温度 · °C",
+      "settings": {
+        "channels": [
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": true}
+        ]
+      }
+    },
+    {
+      "id": "timing",
+      "type": "wave",
+      "title": "MCU 采样间隔 · s",
+      "settings": {
+        "channels": [
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": true}
+        ]
+      }
+    },
+    {
+      "id": "health",
+      "type": "wave",
+      "title": "样本有效与状态",
+      "settings": {
+        "channels": [
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": true},
+          {"visible": true},
+          {"visible": true},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": false},
+          {"visible": true},
+          {"visible": true}
+        ]
+      }
+    }
+  ],
+  "workspace": {
+    "step": 10,
+    "zoom": 1,
+    "rects": {
+      "body_pose": {"x": 0, "y": 0, "width": 470, "height": 430},
+      "quaternion": {"x": 480, "y": 0, "width": 520, "height": 210},
+      "accel": {"x": 480, "y": 220, "width": 520, "height": 210},
+      "gyro": {"x": 0, "y": 440, "width": 470, "height": 220},
+      "temp": {"x": 480, "y": 440, "width": 520, "height": 220},
+      "timing": {"x": 0, "y": 670, "width": 470, "height": 220},
+      "health": {"x": 480, "y": 670, "width": 520, "height": 220}
+    }
+  }
+}

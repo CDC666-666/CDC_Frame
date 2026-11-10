@@ -1,9 +1,9 @@
 /* 首条验证链的 UART7 二进制协议与单帧发送缓冲。 */
 #include "imu_telemetry.h"
 
-#include <float.h>
 #include <string.h>
 
+#include "binary_encoding.h"
 #include "mc02_board.h"
 
 enum {
@@ -12,28 +12,19 @@ enum {
     IMU_TELEMETRY_FOOTER_SIZE = 4,
 };
 
-_Static_assert(sizeof(float) == 4 && FLT_RADIX == 2 && FLT_MANT_DIG == 24 && FLT_MAX_EXP == 128,
-               "Serial Plotter requires IEEE 754 binary32");
 _Static_assert(IMU_TELEMETRY_FRAME_SIZE == IMU_TELEMETRY_HEADER_SIZE +
                                                4 * IMU_TELEMETRY_CHANNEL_COUNT +
                                                IMU_TELEMETRY_FOOTER_SIZE,
                "Serial Plotter frame size mismatch");
 
+/* 将遥测缓冲区标记为空，并清零丢帧计数。 */
 void imu_telemetry_init(imu_telemetry_t *telemetry)
 {
     telemetry->frame_offset = sizeof(telemetry->frame);
     telemetry->dropped_frames = 0U;
 }
 
-static void encode_float32_le(uint8_t *out, float value)
-{
-    uint32_t bits;
-    memcpy(&bits, &value, sizeof(bits));
-    for (size_t i = 0; i < sizeof(bits); ++i) {
-        out[i] = (uint8_t)(bits >> (8U * i));
-    }
-}
-
+/* 将快照编码为一帧，上一帧尚未发完时保留原帧并累计丢帧。 */
 void imu_telemetry_submit(imu_telemetry_t *telemetry, const imu_telemetry_snapshot_t *snapshot,
                           uint32_t skipped_slots)
 {
@@ -73,12 +64,14 @@ void imu_telemetry_submit(imu_telemetry_t *telemetry, const imu_telemetry_snapsh
     const uint8_t footer[IMU_TELEMETRY_FOOTER_SIZE] = {0x00, 0x00, 0x80, 0x7F};
     memcpy(telemetry->frame, header, sizeof(header));
     for (size_t i = 0; i < IMU_TELEMETRY_CHANNEL_COUNT; ++i) {
-        encode_float32_le(&telemetry->frame[sizeof(header) + 4U * i], (float)channels[i]);
+        binary_encoding_write_float32_le(&telemetry->frame[sizeof(header) + 4U * i],
+                                         (float)channels[i]);
     }
     memcpy(&telemetry->frame[sizeof(telemetry->frame) - sizeof(footer)], footer, sizeof(footer));
     telemetry->frame_offset = 0U;
 }
 
+/* 将剩余字节写入 UART7，记录实际写入进度供下轮续发。 */
 void imu_telemetry_poll(imu_telemetry_t *telemetry)
 {
     const size_t remaining = sizeof(telemetry->frame) - telemetry->frame_offset;

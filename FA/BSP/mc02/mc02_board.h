@@ -36,4 +36,10 @@ bool mc02_board_take_gyro_ready(void);
  */
 size_t mc02_board_uart_write(const uint8_t *data, size_t size);
 
+/** @brief 台架模式启动 UART7 接收，须在板级初始化后由主循环调用。 */
+void mc02_board_uart_enable_rx(void);
+
+/** @brief 非阻塞读取一个字节。-1 表示空，-2 表示接收错误且已清空 RX FIFO。 */
+int mc02_board_uart_read(void);
+
 #endif /* FRAME_CDC_PLATFORM_MC02_MC02_BOARD_H */

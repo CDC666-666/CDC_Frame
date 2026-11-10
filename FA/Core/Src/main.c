@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "imu_app.h"
+#include "frame_system.h"
 
 /* USER CODE END Includes */
 
@@ -92,7 +92,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-  imu_app_init();
+  frame_system_init();
 
   /* USER CODE END 2 */
 
@@ -103,7 +103,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    imu_app_poll();
+    frame_system_poll();
   }
   /* USER CODE END 3 */
 }

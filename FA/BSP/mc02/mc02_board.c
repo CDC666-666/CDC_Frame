@@ -195,3 +195,22 @@ size_t mc02_board_uart_write(const uint8_t *data, size_t size)
     }
     return count;
 }
+
+void mc02_board_uart_enable_rx(void)
+{
+    UART7->CR1 |= USART_CR1_RE;
+}
+
+int mc02_board_uart_read(void)
+{
+    const uint32_t status = UART7->ISR;
+    if ((status & (USART_ISR_PE | USART_ISR_FE | USART_ISR_NE | USART_ISR_ORE)) != 0U) {
+        UART7->ICR = USART_ICR_PECF | USART_ICR_FECF | USART_ICR_NECF | USART_ICR_ORECF;
+        UART7->RQR = USART_RQR_RXFRQ;
+        return -2;
+    }
+    if ((status & USART_ISR_RXNE_RXFNE) == 0U) {
+        return -1;
+    }
+    return (int)(UART7->RDR & 0xFFU);
+}

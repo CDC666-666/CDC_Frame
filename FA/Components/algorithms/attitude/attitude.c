@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "math_utils.h"
+
 static const double s_gravity_m_s2 = 9.80665;
 static const double s_max_step_s = 0.025;
 static const double s_gravity_gain_per_s = 2.0;
@@ -107,4 +109,19 @@ void attitude_update(attitude_t *attitude, const attitude_observation_t *observa
         q[i] = next[i] * inverse_norm;
     }
     attitude->status = has_gravity ? ATTITUDE_STATUS_OK : ATTITUDE_STATUS_GYRO_ONLY;
+}
+
+bool attitude_get_pitch_rad(const attitude_t *attitude, double *pitch_rad)
+{
+    if (!attitude->is_initialized ||
+        (attitude->status != ATTITUDE_STATUS_OK && attitude->status != ATTITUDE_STATUS_GYRO_ONLY)) {
+        return false;
+    }
+    const double *q = attitude->q_odom_from_body;
+    const double sin_pitch = 2.0 * (q[0] * q[2] - q[1] * q[3]);
+    if (!isfinite(sin_pitch)) {
+        return false;
+    }
+    *pitch_rad = asin(math_utils_clamp(sin_pitch, -1.0, 1.0));
+    return true;
 }

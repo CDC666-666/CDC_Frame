@@ -2,6 +2,7 @@
 #define FRAME_CDC_ALGORITHMS_ATTITUDE_ATTITUDE_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef enum {
     ATTITUDE_STATUS_OK = 0,
@@ -23,6 +24,12 @@ typedef struct {
     bool is_initialized;
 } attitude_t;
 
+typedef struct {
+    attitude_t attitude;
+    uint64_t sample_time_us; /* 板级单调微秒。 */
+    bool is_sample_valid;
+} attitude_sample_t;
+
 /** @brief 将非空估计器初始化为单位四元数和等待状态。 */
 void attitude_init(attitude_t *attitude);
 
@@ -31,5 +38,10 @@ void attitude_init(attitude_t *attitude);
  * @details 无效观测或间隔保留上次姿态并更新状态；初始化需要近静止的重力观测。
  */
 void attitude_update(attitude_t *attitude, const attitude_observation_t *observation, double dt_s);
+
+/** @brief 读取 body → odom 的 Z-Y-X 俯仰角主值 [-π/2, π/2]，正向绕 +Y，单位 rad。
+ * @return 估计状态或数值无效时返回 false，输出保持原值。指针均须非空。
+ */
+bool attitude_get_pitch_rad(const attitude_t *attitude, double *pitch_rad);
 
 #endif /* FRAME_CDC_ALGORITHMS_ATTITUDE_ATTITUDE_H */
