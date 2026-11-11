@@ -1,0 +1,45 @@
+# SI 参数与显式单位。null 表示尚未核实的实物配置。
+schema_version: 1
+scenes:
+  imu:
+    application: imu
+    telemetry: imu
+  motor_bench_imu:
+    application: motor_bench
+    telemetry: imu
+  motor_bench_motor:
+    application: motor_bench
+    telemetry: motor
+imu:
+  sample_period_us: 5000
+telemetry:
+  period_us: 20000
+can:
+  bitrate_hz: null
+motor:
+  motor_id: 0x01
+  master_id: 0x11
+  position_max_rad: null
+  speed_max_rad_s: null
+  torque_max_n_m: null
+  feedback_timeout_us: 50000
+execution:
+  has_status_request: false
+  enable_timeout_us: 100000
+  status_period_us: 20000
+  disable_retry_us: 20000
+  kd_n_m_s_per_rad: 0.1
+controller:
+  mode: feedback
+  control_period_us: 10000
+  attitude_timeout_us: 25000
+  fixed_speed_rad_s: 0.5
+algorithm:
+  pitch:
+    center_pitch_rad: 0.0
+    pitch_deadband_rad: 0.05
+    pitch_to_speed_per_s: 4.0
+  trajectory:
+    speed_limit_rad_s: 1.0
+    accel_limit_rad_s2: 1.0
+    decel_limit_rad_s2: 2.0

@@ -14,16 +14,22 @@ static uint32_t s_last_slot;
 static size_t s_wire_size;
 static uint8_t s_wire[FRAME_COUNT * IMU_FRAME_SIZE];
 
+/** 作用模拟板级初始化成功以运行主机装配。
+ * 输入无参数，输出 true 表示假板级初始化成功。 */
 bool mc02_board_init(void)
 {
     return true;
 }
 
+/** 作用提供由测试控制的假板级时钟。
+ * 输入无参数，读取全局 s_now_us，输出当前假时间（微秒）。 */
 uint64_t mc02_board_time_us(void)
 {
     return s_now_us;
 }
 
+/** 作用模拟每轮最多接收 23 字节的 UART 以覆盖遥测分次发送。
+ * 输入非空 data 和 size，输出追加后的 s_wire 及长度，返回本轮接收字节数。 */
 size_t mc02_board_uart_write(const uint8_t *data, size_t size)
 {
     /* 一帧至少需要四轮主循环才能发送完。 */
@@ -34,12 +40,16 @@ size_t mc02_board_uart_write(const uint8_t *data, size_t size)
     return sent;
 }
 
+/** 作用初始化 BMI088 主机替身并模拟初始化耗时。
+ * 输入非空 device，输出清零的设备及推进后的假时钟，无返回值。 */
 void bmi088_init(bmi088_t *device)
 {
     *device = (bmi088_t){0};
     s_now_us += 1000U;
 }
 
+/** 作用生成确定性 IMU 样本并在指定时槽模拟采样失败。
+ * 输入非空 device、time_us 和 sequence，输出假样本、有效性及槽记录，无返回值。 */
 void bmi088_sample(bmi088_t *device, uint64_t time_us, uint32_t sequence)
 {
     assert(sequence > s_last_slot);
@@ -59,6 +69,8 @@ void bmi088_sample(bmi088_t *device, uint64_t time_us, uint32_t sequence)
     };
 }
 
+/** 作用从 IMU 帧中按小端 float32 读取指定通道。
+ * 输入非空 frame 和从零开始的 index，输出对应通道的 float 数值。 */
 static float read_channel(const uint8_t *frame, size_t index)
 {
     const uint8_t *bytes = frame + 4U + 4U * index;
@@ -69,6 +81,8 @@ static float read_channel(const uint8_t *frame, size_t index)
     return value;
 }
 
+/** 作用通过生产装配生成 IMU 回归帧并核对采样、丢样及遥测字段。
+ * 输入argc/argv 指定输出文件路径，输出 460 字节帧文件和通过信息，成功返回 0。 */
 int main(int argc, char *argv[])
 {
     assert(argc == 2);

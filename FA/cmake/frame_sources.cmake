@@ -1,0 +1,33 @@
+# Explicit production source lists shared by firmware and host verification.
+set(FRAME_INCLUDE_DIRS
+    01_assembly
+    02_components/controller
+    02_components/hardware/devices/damiao
+    02_components/hardware/imu
+    02_components/hardware/ins
+    02_components/operator
+    02_components/telemetry
+    03_algorithm/attitude
+    03_algorithm/common
+    03_algorithm/trajectory
+    04_base/bsp
+    04_base/bsp/mc02
+    04_base/devices/bmi088
+    04_base/services/can
+)
+set(FRAME_COMMON_SOURCES
+    01_assembly/frame_system.c
+    02_components/hardware/imu/imu_observer.c
+    02_components/hardware/ins/ins.c
+    02_components/telemetry/telemetry_encoding.c
+    03_algorithm/attitude/attitude.c
+)
+set(FRAME_MOTOR_SOURCES
+    01_assembly/motor_bench.c
+    02_components/controller/speed_controller.c
+    02_components/hardware/devices/damiao/damiao_mit.c
+    02_components/hardware/devices/damiao/damiao_motor.c
+    02_components/operator/operator_input.c
+    03_algorithm/trajectory/speed_trajectory.c
+    04_base/services/can/can_service.c
+)
