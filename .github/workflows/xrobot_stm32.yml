@@ -1,0 +1,19 @@
+name: build
+
+on:
+  push:
+    branches: [main, master, dev]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master, dev]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # The release job of the shared workflow attaches firmware to releases, which needs write access.
+    permissions:
+      contents: write
+    uses: xrobot-org/XRobot/.github/workflows/bsp-stm32-ci.yml@v1
+    with:
+      project: CtrBoard-H7_ALL
+      build-type: Debug
