@@ -5,17 +5,139 @@
       "label": "XRobot: Generate project modules",
       "type": "process",
       "command": "${workspaceFolder}/build/tooling-env/Scripts/python.exe",
-      "args": ["tools/xrobot_project.py", "gen"],
-      "options": {"cwd": "${workspaceFolder}"},
+      "args": [
+        "tools/xrobot_project.py",
+        "gen"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "D:/Apps/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin;D:/Apps/Clion/CLion 2025.3.3/bin/ninja/win/x64;${env:PATH}"
+        },
+        "statusbar": {
+          "hide": true
+        }
+      },
       "problemMatcher": []
     },
     {
       "label": "XRobot: Restore locked project modules",
       "type": "process",
       "command": "${workspaceFolder}/build/tooling-env/Scripts/python.exe",
-      "args": ["tools/xrobot_project.py", "setup", "--frozen"],
-      "options": {"cwd": "${workspaceFolder}"},
+      "args": [
+        "tools/xrobot_project.py",
+        "setup",
+        "--frozen"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "D:/Apps/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin;D:/Apps/Clion/CLion 2025.3.3/bin/ninja/win/x64;${env:PATH}"
+        },
+        "statusbar": {
+          "hide": true
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MC02: 配置 Debug",
+      "type": "process",
+      "command": "${config:cmake.cmakePath}",
+      "args": [
+        "--preset",
+        "Debug",
+        "-DCMAKE_MAKE_PROGRAM=D:/Apps/Clion/CLion 2025.3.3/bin/ninja/win/x64/ninja.exe"
+      ],
+      "dependsOn": [
+        "XRobot: Generate project modules"
+      ],
+      "dependsOrder": "sequence",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "D:/Apps/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin;D:/Apps/Clion/CLion 2025.3.3/bin/ninja/win/x64;${env:PATH}"
+        },
+        "statusbar": {
+          "hide": true
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MC02: 编译",
+      "type": "process",
+      "command": "${config:cmake.cmakePath}",
+      "args": [
+        "--build",
+        "--preset",
+        "Debug",
+        "--parallel",
+        "4"
+      ],
+      "dependsOn": [
+        "MC02: 配置 Debug"
+      ],
+      "dependsOrder": "sequence",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "D:/Apps/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin;D:/Apps/Clion/CLion 2025.3.3/bin/ninja/win/x64;${env:PATH}"
+        },
+        "statusbar": {
+          "hide": false,
+          "label": "$(gear) 编译",
+          "detail": "生成 XRobot 入口并编译 Debug 固件"
+        }
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
+    },
+    {
+      "label": "MC02: 烧录 DAPLink",
+      "type": "process",
+      "command": "D:/Apps/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+      "args": [
+        "-f",
+        "User_Config/daplink.cfg",
+        "-c",
+        "adapter speed 1000",
+        "-c",
+        "program build/Debug/dm02_test.elf verify reset exit"
+      ],
+      "dependsOn": [
+        "MC02: 编译"
+      ],
+      "dependsOrder": "sequence",
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "D:/Apps/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin;D:/Apps/Clion/CLion 2025.3.3/bin/ninja/win/x64;${env:PATH}"
+        },
+        "statusbar": {
+          "hide": false,
+          "label": "$(zap) 烧录",
+          "detail": "先编译，再用 DAPLink 写入、校验并复位运行（SWD 1 MHz）"
+        }
+      },
       "problemMatcher": []
     }
-  ]
+  ],
+  "presentation": {
+    "reveal": "always",
+    "panel": "shared",
+    "clear": true,
+    "showReuseMessage": false
+  }
 }

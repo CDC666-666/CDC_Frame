@@ -1,5 +1,6 @@
 {
     "recommendations": [
+        "actboy168.tasks", // 显示本项目的编译/烧录状态栏按钮
         "ms-vscode.cmake-tools", // (dependencies to ms-vscode.cpptools-extension-pack)
         "ms-vscode.cpptools-extension-pack", // Provides CMake and C++ file coloring, completion & support
         "dan-c-underwood.arm", // Provides syntax highlighting for the Arm Assembly language

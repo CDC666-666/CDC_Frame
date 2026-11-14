@@ -3,7 +3,7 @@ modules:
   id: rm_music
   args:
   - pwm: pwm_tim12_ch2
-  - enabled: true
+  - enabled: false
   - task_stack_depth: 2048
 settings:
   monitor_sleep_ms: 1000

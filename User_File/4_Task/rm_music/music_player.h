@@ -41,8 +41,7 @@ inline PlaybackStatus CheckScore(bool enabled, std::span<const Note> score) {
 // 在线程中播放一次；借用蜂鸣器和等待函数，等待期间乐谱必须保持有效。
 // wait接收chrono毫秒并阻塞当前线程；返回状态，所有结束路径都静音。
 template <typename Buzzer, typename Wait>
-PlaybackStatus PlayScore(bool enabled, std::span<const Note> score,
-                         Buzzer& buzzer, Wait wait) {
+PlaybackStatus PlayScore(bool enabled, std::span<const Note> score, Buzzer& buzzer, Wait wait) {
   buzzer.Set_Sound(0.0f, 0.0f);
   const auto status = CheckScore(enabled, score);
   if (status != PlaybackStatus::PLAYING) {

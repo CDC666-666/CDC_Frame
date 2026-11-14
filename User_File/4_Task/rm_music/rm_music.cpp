@@ -14,12 +14,10 @@
 RmMusic::RmMusic(LibXR::PWM& pwm, bool enabled,
                  std::uint32_t task_stack_depth) {
   buzzer_.Init(&pwm, 4000.0f, 0.0f);
-  const auto state =
-      frame_cdc::rm_music::CheckScore(enabled, frame_cdc::rm_music::score);
+  const auto state = frame_cdc::rm_music::CheckScore(enabled, frame_cdc::rm_music::score);
   status_.store(state);
   if (state == frame_cdc::rm_music::PlaybackStatus::PLAYING) {
-    thread_.Create(this, Run, "rm_music", task_stack_depth,
-                   LibXR::Thread::Priority::LOW);
+    thread_.Create(this, Run, "rm_music", task_stack_depth, LibXR::Thread::Priority::LOW);
   }
 }
 
@@ -34,12 +32,9 @@ void RmMusic::OnMonitor() {}
 // 在LibXR毫秒时钟上保持累计节拍；输入自身，输出最终状态并静音。
 void RmMusic::Run(RmMusic* self) {
   auto wake_time = LibXR::Timebase::GetMilliseconds();
-  const auto result = frame_cdc::rm_music::PlayScore(
-      true, frame_cdc::rm_music::score, self->buzzer_,
-      [&wake_time](std::chrono::milliseconds duration) {
+  const auto result = frame_cdc::rm_music::PlayScore(true, frame_cdc::rm_music::score, self->buzzer_, [&wake_time](std::chrono::milliseconds duration){
         // 乐谱校验保证1..60000ms；在RTOS边界显式转换位宽。
-        LibXR::Thread::SleepUntil(wake_time,
-                                  static_cast<std::uint32_t>(duration.count()));
+        LibXR::Thread::SleepUntil(wake_time,static_cast<std::uint32_t>(duration.count()));
       });
   self->status_.store(result);
   // 固定LibXR的线程包装不支持返回后删除任务；永久阻塞保留有效实例。

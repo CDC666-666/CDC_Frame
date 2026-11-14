@@ -21,8 +21,7 @@ class RmMusic {
  public:
   // 由官方入口构造一次；借用PWM直到复位，enabled决定是否上电播放。
   // 栈大小以字节计；构造只创建低优先级线程，不阻塞后续模块装配。
-  explicit RmMusic(LibXR::PWM& pwm, bool enabled = true,
-                   std::uint32_t task_stack_depth = 2048);
+  explicit RmMusic(LibXR::PWM& pwm, bool enabled = true, std::uint32_t task_stack_depth = 2048);
 
   RmMusic(const RmMusic&) = delete;
   RmMusic& operator=(const RmMusic&) = delete;

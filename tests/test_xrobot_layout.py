@@ -7,6 +7,8 @@ import sys
 import tempfile
 import unittest
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from project_layout import configure_xrobot, local_records
@@ -32,14 +34,31 @@ class XRobotLayoutTest(unittest.TestCase):
         return generate_code(self.project, path, self.modules, self.registrations)
 
     def test_product_selection(self):
-        """生成开/关两种音乐产品，旧服务及自带开机音不得再构造。"""
+        """按各产品当前开关装配音乐，旧服务及自带开机音不得再构造。"""
         self.assertEqual(validate_all(self.project, self.modules), 2)
-        full = self.render(self.project.default_config)
-        minimal = self.render(self.project.user / "minimal.yaml")
-        self.assertIn("static RmMusic rm_music(pwm_tim12_ch2, true, 2048)", full)
-        self.assertIn("static RmMusic rm_music(pwm_tim12_ch2, false, 2048)", minimal)
-        self.assertNotIn("static Mc02", full)
-        self.assertNotIn("static BuzzerAlarm", full)
+        for path in (self.project.default_config, self.project.user / "minimal.yaml"):
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+            music = next(module for module in data["modules"] if module["id"] == "rm_music")
+            enabled = next(arg["enabled"] for arg in music["args"] if "enabled" in arg)
+            self.assertIsInstance(enabled, bool)
+            rendered = self.render(path)
+            literal = "true" if enabled else "false"
+            self.assertIn(f"static RmMusic rm_music(pwm_tim12_ch2, {literal}, 2048)", rendered)
+            self.assertNotIn("static Mc02", rendered)
+            self.assertNotIn("static BuzzerAlarm", rendered)
+
+    def test_music_switch_generates_both_values(self):
+        """临时配置独立覆盖true和false，不要求仓库默认产品必须开启音乐。"""
+        data = yaml.safe_load(self.project.default_config.read_text(encoding="utf-8"))
+        music = next(module for module in data["modules"] if module["id"] == "rm_music")
+        switch = next(arg for arg in music["args"] if "enabled" in arg)
+        with tempfile.TemporaryDirectory() as folder:
+            for enabled in (True, False):
+                literal = "true" if enabled else "false"
+                config = Path(folder) / f"{literal}.yaml"
+                switch["enabled"] = enabled
+                config.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+                self.assertIn(f"pwm_tim12_ch2, {literal}, 2048)", self.render(config))
 
     def test_missing_hardware_rejected(self):
         """缺失硬件注册必须在生成时拒绝，而非留下失效依赖。"""
