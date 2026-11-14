@@ -241,16 +241,20 @@
       "path": "2_Device/Powermeter/dvc_powermeter.h",
       "source_sha256": "9ba6605ce3ed6edccaab890a627931712124d4db7d81d8cb3d3c43494ca60103",
       "adapted_sha256": "1e2de15db309970712b025bbe873ca5412d1f5a8c0bd6378ff5f5d01ca4593cd"
-    },
+    }
+  ],
+  "retired_files": [
     {
       "path": "4_Task/tsk_config_and_callback.cpp",
       "source_sha256": "a09ae23e1abef86407f79c454f310aa0533a13bb85b083f75e6cf64d5e65a2ec",
-      "adapted_sha256": "4af7bb6561a89440134f9a38140b3094e47ae7fdd6ff95f23d1989a6d1ff80f1"
+      "adapted_sha256": "e73cd2447b1fb037bb1924511d3946bd4ced252983c594903a17b38aa58775f8",
+      "reason": "2026-11-15 user-requested deletion; types now owned by individual frame-cdc modules"
     },
     {
       "path": "4_Task/tsk_config_and_callback.h",
       "source_sha256": "d7cf830c5189413ef6fb56a9478fd1511944b4cb11f5e4d150c25232ab5c67d2",
-      "adapted_sha256": "f879e25cb546a4c0bf92117beef3b6aeac7fbe4413be6244e9de89c8803c8c46"
+      "adapted_sha256": "825edd8e6905778c93cc84c4c7c5e96c43dd06d6a3cef0095c888783f60b8c5a",
+      "reason": "2026-11-15 user-requested deletion; types now owned by individual frame-cdc modules"
     }
   ]
 }

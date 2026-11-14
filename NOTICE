@@ -55,3 +55,11 @@ User_File/3_Modules/xrobot-org/DurationStatistics/ (restored by xrobot setup)
   79eb346bacec419c6c34c19183c6bab0f2225b6d. Apache License 2.0;
   see the module's own LICENSE. BMI088 and W25QXX official sources are design
   references; their implementations have not replaced the reference devices.
+
+User_File/4_Task/rm_music/rm_music_score.h
+  Automatically transcribed from the local audio supplied by the user for
+  RoboMaster three-minute preparation music. The repository license does not
+  relicense the underlying musical work. No source audio, model weights or
+  Basic Pitch implementation is included in firmware source.
+  Authoring tool: Spotify Basic Pitch 0.4.0 (Apache-2.0), used separately in
+  build/music-env. See the central project documentation for conversion details.

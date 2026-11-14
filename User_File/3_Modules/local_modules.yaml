@@ -1,1 +1,3 @@
-modules: []
+modules:
+- id: tasks/RmMusic
+  path: User_File/4_Task/rm_music

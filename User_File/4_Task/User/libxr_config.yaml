@@ -79,7 +79,7 @@ Terminal:
   max_line_size: 96
   max_arg_number: 8
   max_history_number: 5
-  run_as_thread: false
+  run_as_thread: true
   thread_stack_depth: 2048
   thread_priority: 2
 database:

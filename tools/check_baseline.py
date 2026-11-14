@@ -50,20 +50,24 @@ def main():
     require("STM32Watchdog iwdg1(&hiwdg1, 8192, 1000)" in app, "Watchdog timing changed")
     require('"iwdg1_wdg", 1024, Thread::Priority::HIGH' in app, "Watchdog thread missing")
     require("spi6_tx_buf, UINT32_MAX" in app, "SPI6 must retain polling semantics")
-    task = (project / "User_File/4_Task/tsk_config_and_callback.cpp").read_text(encoding="utf-8")
-    require("XROBOT_MAIN();" in app and "terminal.ThreadFun" in task,
-            "XRobot/routed terminal integration missing")
-    require("term_thread.Create" not in app and "self->usb_.Process();" in task,
-            "Physical CDC must have one application reader")
-    require("hardware_.terminal.read_port_ = &console_input_;" in task,
-            "Terminal must consume routed logical input")
+    require("XROBOT_MAIN();" in app and "term_thread.Create" in app,
+            "Official XRobot/terminal startup missing")
+    require(not (project / "User_File/3_Modules/frame-cdc").exists(),
+            "Retired frame-cdc application remains")
+    product = (project / "User_File/4_Task/User/xrobot.yaml").read_text(encoding="utf-8")
+    require("tasks/RmMusic" in product and "pwm_tim12_ch2" in product,
+            "Music task must bind MC02 TIM12 CH2")
+    require("xrobot-org/BuzzerAlarm" not in product,
+            "Unconditional BuzzerAlarm startup tune conflicts with music switch")
     require("ADC_CHANNEL_19" not in app, "ADC19 still registered")
     require("X-CUBE-ALGOBUILD" not in (project / "dm02_test.ioc").read_text(encoding="utf-8"), "Unexpected DSP pack dependency")
     require(not (project / "USB_DEVICE").exists(), "Second USB device stack present")
     for relative in ("User_File/2_Device", "User_File/4_Task", "User_File/1_Middleware/Driver"):
         require((project / relative).is_dir(), f"Approved reference adaptation missing: {relative}")
-    require("ReferenceApplication" in app, "Reference application owner missing")
-    for directory in (project / "Core", project / "User", project / "User_File"):
+    require("ReferenceApplication" not in app, "Manual application assembly remains")
+    require(not (project / "Modules").exists() and not (project / "User").exists(),
+            "Old root layout remains")
+    for directory in (project / "Core", project / "User_File"):
         for path in directory.rglob("*"):
             if path.suffix in (".c", ".cpp", ".h", ".hpp"):
                 text = path.read_text(encoding="utf-8-sig")

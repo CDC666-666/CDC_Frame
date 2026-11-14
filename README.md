@@ -2,7 +2,7 @@
 
 工程位于 `bsp-dev-mc02`，当前 CubeMX 工程及固件名称为 `dm02_test`。MCU 为 STM32H723VGT6；外设配置以指定的本地 `damiao_mc02_bsp-main/damiao_mc02_bsp-main/dm02_test` 为参考。
 
-底层配置和生成层已按参考对齐，保留 FreeRTOS、LibXR/XRobot；随后按原接口导入了11类纯算法。参考设备库、IMU 温控、电机示例和任务均未导入。算法仍有已记录且未修复的问题；配置、编译和已覆盖的数值测试不代表已经上板验证。
+底层配置和生成层已按参考对齐，保留 FreeRTOS、LibXR/XRobot、70份参考核心源码和22份原字节算法。按用户最新要求，frame-cdc四个运行模块已删除；当前应用为User_File/4_Task/rm_music，调用既有蜂鸣器组件上电播放一次用户提供音频的自动转录谱。算法仍有已记录且未修复的问题；编译和主机测试不代表实板验证。
 
 ## 配置与运行入口
 
@@ -17,7 +17,7 @@
 | 系统时基 | TIM17 为 HAL 和 LibXR 提供 1 ms 时基；SysTick 为 RTOS 调度节拍 |
 | 看门狗 | 名义超时 8192 ms，独立高优先级线程每 1000 ms 喂狗，栈参数 1024 B |
 
-启动链为 `main → defaultTask → app_main → XROBOT_MAIN`。现有应用配置仍为 BuzzerAlarm，使用 `pwm_tim12_ch2`。参考定时器仅初始化，没有接入或启动参考示例的周期回调。板级 PC13/PC14/PC15 按参考初始化为低电平。
+启动链为 `main → defaultTask → app_main → XROBOT_MAIN`。产品YAML构造RmMusic，独占TIM12 CH2蜂鸣器；enabled: true播放一次，false静音，改后需重新生成/编译/烧录。有效谱使用2048 B低优先级线程，结束后静音并永久阻塞；禁用或缺谱时不创建播放线程。BuzzerAlarm不再实例化，避免其自带开机音绕过开关；相应自定义致命错误报警也不再安装。USB终端恢复官方自动线程，旧ref诊断/演示/采样/Flash后台不再运行。参考TIM4/7/8只初始化，PC13/PC14/PC15按参考初始化为低电平。
 
 IWDG 的 IOC 保留参考分频/重载值；LibXR 启动时根据名义超时重新计算等效寄存器配置并关闭窗口约束。基础周期喂狗不等于业务任务健康监测，实际超时还受 LSI 频率影响。
 
@@ -27,7 +27,7 @@ IWDG 的 IOC 保留参考分频/重载值；LibXR 启动时根据名义超时重
 - 启动汇编为 `Core/Startup/startup_stm32h723vgtx.s`，链接脚本为 `STM32H723VGTX_FLASH.ld`。
 - `User_File/4_Task/User/app_main.cpp`、`User_File/4_Task/User/app_main.h`、`User_File/4_Task/User/flash_map.hpp` 由固定版本生成工具生成；自定义内容仅放在 User Code 区。
 - `User_File/3_Modules/modules.yaml`、`xrobot.lock` 固定应用模块，`User_File/4_Task/User/libxr_config.yaml` 固定生成器与硬件封装设置。
-- LibXR 子模块固定为 `5161373dbe6d9d9fb1904d90e0ebd4344a44047a`；BuzzerAlarm 固定提交由 `xrobot.lock` 记录，不自动更新。
+- LibXR 子模块固定为 `5161373dbe6d9d9fb1904d90e0ebd4344a44047a`；BuzzerAlarm及新增DurationStatistics的固定提交由 `xrobot.lock` 记录，不自动更新。
 
 参考 GPIO 标签包含双下划线。IOC 和 HAL 宏保持参考名称；`tools/generate_libxr.py` 在固定 libxr 6.0.1 的对象命名适配点合并连续下划线，保持其余标识符/冲突检查有效。例如 `BMI088_ACCEL__SPI_CS_Pin` 对应 LibXR 对象 `BMI088_ACCEL_SPI_CS`。不要直接运行未适配的 `libxr stm32 setup` 覆盖生成物，统一使用下方入口。
 
@@ -75,10 +75,14 @@ CI 使用同一 GPIO 名称适配入口，检查生成一致性及参考配置�
 
 ## 参考设备与驱动
 
-`User_File`完整对应唯一参考的72个文件名/层级：22份算法原件、50份Driver/System/设备/任务适配。`ReferenceApplication`持有设备状态并接入现有LibXR后端；USB只有一个物理读者，终端和`q00/q11/r00/r11`调参由有界分流器处理。`ref`提供状态、IMU/加热、绘图、板载设备、GM6020和Flash维护命令，启动默认不运行IMU、加热、电机或Flash操作。
+`User_File`保留唯一参考的70个核心文件名/层级：22份算法原件、48份Driver/System/设备适配；原Task两文件按用户要求删除并在来源清单中单独记录。当前仅rm_music经YAML和官方生成入口装配；USB由官方终端线程读取。旧ref诊断、调参分流、IMU/加热、绘图、电机示例和Flash后台已撤下，相关设备/驱动作为库保留，后续按需求重新装配。
 
 功能清单、调用边界、命令及待实板验收项见 [使用说明](../../readme/框架/USER_FILE_README.md)。适配快照由`tools/check_reference_devices.py`校验；主机协议测试位于`tests/drivers`，HAL/LibXR替身通过不代表真实DMA、时序或外设通过。当前实测与限制只以集中状态为准。
 
-## 自定义目录入口
+`User_Config/daplink.cfg`、`stlink.cfg`沿用参考原件；仅做过OpenOCD禁用初始化的配置解析，未连接探针。ST-Link旧接口脚本有弃用警告，DAPLink的FLASH_SIZE变量在当前目标脚本中未使用；不能据配置存在声称烧录、Flash容量或保护区域已验证。
 
-Modules/User已移入User_File/3_Modules及4_Task/User。使用tools/xrobot_project.py运行官方CLI，完整生成使用tools/regenerate.py；仓内登记暂为空，旧ReferenceApplication装配仍保留。固定版本上游不原生支持此自定义布局。
+## 自定义目录及模块开发
+
+2026-11-15按用户要求，根Modules/User已移到User_File/3_Modules和User_File/4_Task/User。RmMusic任务使用V2 manifest、构造参数及YAML实例；默认/静音产品见对应xrobot.yaml、minimal.yaml。播放开关和线程栈容量由YAML构造参数指定。
+
+固定上游工具不原生支持此目录，使用项目入口：`build/tooling-env/Scripts/python.exe tools/xrobot_project.py setup --frozen`、`gen`、`describe`及`instance ...`；完整生成仍用tools/regenerate.py。安装包和LibXR原件未改，CMake继续使用官方输入摘要检查。自有模块随BSP管理，外部模块仍由真实lock固定；原生VS Code模块树目录发现未适配，已提供项目生成/恢复任务。完整说明见[模块组织](../../readme/框架/MODULE_ORGANIZATION.md)。后续开发必须先用本地xrobot skill，并核对对应官方文档/开源源码。

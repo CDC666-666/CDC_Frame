@@ -2,9 +2,7 @@
 file(GLOB_RECURSE DM02_DEVICE_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/User_File/1_Middleware/Driver/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/User_File/1_Middleware/System/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/User_File/2_Device/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/User_File/4_Task/*.cpp")
-list(FILTER DM02_DEVICE_SOURCES EXCLUDE REGEX "/User_File/4_Task/User/")
+    "${CMAKE_CURRENT_SOURCE_DIR}/User_File/2_Device/*.cpp")
 add_library(dm02_devices STATIC ${DM02_DEVICE_SOURCES})
 target_compile_features(dm02_devices PUBLIC cxx_std_20)
 target_include_directories(dm02_devices PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/User_File")

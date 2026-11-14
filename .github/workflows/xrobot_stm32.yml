@@ -36,12 +36,20 @@ jobs:
           python tools/check_baseline.py
           python tools/check_algorithm_import.py
           python tools/check_reference_devices.py
+          python tests/test_xrobot_layout.py -v
       - name: Run driver protocol tests on host
         run: |
           cmake -S tests/drivers -B build/driver-tests -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.preset }}
           cmake --build build/driver-tests --parallel 4
           ctest --test-dir build/driver-tests --output-on-failure --output-junit results.xml
-      - name: Build firmware
+      - name: Run music playback tests on host
+        # Audio transcription is an offline authoring step; firmware uses the checked-in score.
+        # Keep TensorFlow/Basic Pitch out of the firmware toolchain.
+        run: |
+          cmake -S tests/music -B build/music-tests -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.preset }}
+          cmake --build build/music-tests --parallel 4
+          ctest --test-dir build/music-tests --output-on-failure
+      - name: Build firmware image
         run: |
           cmake --preset ${{ matrix.preset }}
           cmake --build --preset ${{ matrix.preset }} --parallel 4
