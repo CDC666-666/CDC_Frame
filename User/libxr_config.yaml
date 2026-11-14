@@ -90,3 +90,14 @@ DAC:
   dac1:
     init_voltage: 0.0
     vref: 3.3
+
+IWDG:
+  iwdg1:
+    timeout_ms: 8192
+    feed_interval_ms: 1000
+
+Watchdog:
+  run_as_thread: true
+  thread_stack_depth: 1024
+  thread_priority: 3
+  feed_interval_ms: 1000

@@ -31,7 +31,7 @@ void OnProjectLoad (void) {
   // User settings
   //
   Project.SetOSPlugin ("FreeRTOSPlugin_CM4");
-  File.Open ("$(ProjectDir)/build/Debug/CtrBoard-H7_ALL.elf");
+  File.Open ("$(ProjectDir)/build/Debug/dm02_test.elf");
 }
 
 /*********************************************************************

@@ -1,5 +1,7 @@
 Language: Cpp
 BasedOnStyle: Google
 IncludeBlocks: Regroup
-ColumnLimit: 90
-BreakBeforeBraces: Allman
+ColumnLimit: 80
+IndentWidth: 2
+UseTab: Never
+BreakBeforeBraces: Attach

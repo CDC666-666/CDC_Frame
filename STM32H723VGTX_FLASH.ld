@@ -60,7 +60,9 @@ RAM_D1 (xrw)      : ORIGIN = 0x24000000, LENGTH = 320K
 RAM_D2 (xrw)      : ORIGIN = 0x30000000, LENGTH = 32K
 RAM_D3 (xrw)      : ORIGIN = 0x38000000, LENGTH = 16K
 ITCMRAM (xrw)      : ORIGIN = 0x00000000, LENGTH = 64K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 1024K
+/* LibXR STM32Flash(regions, count) uses the final two 128 KiB sectors.
+   Keep firmware below 0x080C0000 so DatabaseRaw cannot overlap the image. */
+FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 768K
 }
 
 /* Highest address of the user mode stack */
