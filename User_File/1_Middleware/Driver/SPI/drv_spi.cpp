@@ -5,21 +5,46 @@
 #include "timebase.hpp"
 
 // 保存SPI借用；输入接口，无返回，不启动新事务。
-void Struct_SPI_Manage_Object::Bind(LibXR::SPI& spi) { spi_ = &spi; }
+void Struct_SPI_Manage_Object::Bind(LibXR::SPI& spi) {
+  spi_ = &spi;
+  completion_ = LibXR::SPI::OperationRW::Callback::Create(
+      [](bool in_isr, Struct_SPI_Manage_Object* self, LibXR::ErrorCode result) {
+        self->Complete(in_isr, result);
+      },
+      this);
+}
 
-// 在线程执行完整SPI事务；输入片选和阶段长度，返回完成状态。
+// DMA或阻塞事务完成收尾；输入上下文/结果，输出设备回调并释放占用。
+void Struct_SPI_Manage_Object::Complete(bool in_isr, LibXR::ErrorCode result) {
+  if (Activate_GPIOx != nullptr) {
+    HAL_GPIO_WritePin(
+        Activate_GPIOx, Activate_GPIO_Pin,
+        Activate_Level == GPIO_PIN_SET ? GPIO_PIN_RESET : GPIO_PIN_SET);
+  }
+  if (result != LibXR::ErrorCode::OK) {
+    faulted_.store(true);
+  }
+  Rx_Timestamp = LibXR::Timebase::GetMicroseconds();
+  if (result == LibXR::ErrorCode::OK && Rx_Buffer_Length != 0) {
+    on_receive.Run(in_isr);
+  }
+  Activate_GPIOx = nullptr;
+  busy_.store(false);
+}
+
+// 输入片选/阶段长度/上下文；线程等待DMA，ISR只提交，CS在完成后释放。
 uint8_t Struct_SPI_Manage_Object::Transfer(GPIO_TypeDef* port, uint16_t pin,
                                            GPIO_PinState active,
-                                           uint16_t tx_size, uint16_t rx_size) {
+                                           uint16_t tx_size, uint16_t rx_size,
+                                           bool in_isr) {
   const size_t total = static_cast<size_t>(tx_size) + rx_size;
-  if (spi_ == nullptr || faulted_ || total == 0 || total > SPI_BUFFER_SIZE ||
-      frame_cdc::IsInterruptContext()) {
+  if (spi_ == nullptr || faulted_.load() || total == 0 ||
+      total > SPI_BUFFER_SIZE) {
     return HAL_ERROR;
   }
-  if (busy_) {
+  if (busy_.exchange(true)) {
     return HAL_BUSY;
   }
-  busy_ = true;
   Activate_GPIOx = port;
   Activate_GPIO_Pin = pin;
   Activate_Level = active;
@@ -29,37 +54,30 @@ uint8_t Struct_SPI_Manage_Object::Transfer(GPIO_TypeDef* port, uint16_t pin,
   if (port != nullptr) {
     HAL_GPIO_WritePin(port, pin, active);
   }
-  LibXR::SPI::OperationRW operation(completed_, 20);
-  const auto result = rx_size == 0
-                          ? spi_->Write({Tx_Buffer, total}, operation)
-                          : spi_->ReadAndWrite({Rx_Buffer, total},
-                                               {Tx_Buffer, total}, operation);
-  // LibXR BLOCK超时不承诺取消底层DMA，锁存后禁止再次提交/复用后端缓冲。
-  faulted_ = result != LibXR::ErrorCode::OK;
-  if (port != nullptr) {
-    HAL_GPIO_WritePin(port, pin,
-                      active == GPIO_PIN_SET ? GPIO_PIN_RESET : GPIO_PIN_SET);
+  LibXR::SPI::OperationRW operation =
+      in_isr ? LibXR::SPI::OperationRW(completion_)
+             : LibXR::SPI::OperationRW(completed_, 20);
+  const auto result =
+      rx_size == 0 ? spi_->Write({Tx_Buffer, total}, operation, in_isr)
+                   : spi_->ReadAndWrite({Rx_Buffer, total}, {Tx_Buffer, total},
+                                        operation, in_isr);
+  if (!in_isr || result != LibXR::ErrorCode::OK) {
+    Complete(in_isr, result);
   }
-  Rx_Timestamp = LibXR::Timebase::GetMicroseconds();
-  // 参考设备回调在清除片选元数据前解析整帧；回调在本工作线程执行。
-  if (result == LibXR::ErrorCode::OK && rx_size != 0) {
-    on_receive.Run(false);
-  }
-  Activate_GPIOx = nullptr;
-  busy_ = false;
   return result == LibXR::ErrorCode::OK ? HAL_OK : HAL_ERROR;
 }
 
-// 发送SPI事务；输入对象、片选及长度，返回最终状态。
+// 发送SPI事务；输入对象、片选及长度，线程返回完成状态，ISR返回接受状态。
 uint8_t SPI_Transmit_Data(Struct_SPI_Manage_Object* driver, GPIO_TypeDef* port,
                           uint16_t pin, GPIO_PinState active, uint16_t size) {
   if (driver == nullptr) {
     return HAL_ERROR;
   }
-  return driver->Transfer(port, pin, active, size, 0);
+  return driver->Transfer(port, pin, active, size, 0,
+                          frame_cdc::IsInterruptContext());
 }
 
-// 执行命令加接收事务；输入对象、片选及长度，返回最终状态。
+// 执行命令加接收事务；输入对象、片选及长度，线程返回完成、ISR返回接受状态。
 uint8_t SPI_Transmit_Receive_Data(Struct_SPI_Manage_Object* driver,
                                   GPIO_TypeDef* port, uint16_t pin,
                                   GPIO_PinState active, uint16_t tx_size,
@@ -67,5 +85,6 @@ uint8_t SPI_Transmit_Receive_Data(Struct_SPI_Manage_Object* driver,
   if (driver == nullptr) {
     return HAL_ERROR;
   }
-  return driver->Transfer(port, pin, active, tx_size, rx_size);
+  return driver->Transfer(port, pin, active, tx_size, rx_size,
+                          frame_cdc::IsInterruptContext());
 }

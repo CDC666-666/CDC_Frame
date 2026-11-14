@@ -25,27 +25,27 @@
     {
       "path": "1_Middleware/Driver/OSPI/drv_ospi.cpp",
       "source_sha256": "41244a05490247f113511a38119a4ef6ea36d8e8c827ee5b2bf8c3e8aab1e272",
-      "adapted_sha256": "a50e9cf41002b9ba86a0b00325856a0a4fa845ebb397db7e6a1814a83d03f418"
+      "adapted_sha256": "6224420a50005ea46a0d0563072a121dc0b63c1616a89b083ca56ef67049f328"
     },
     {
       "path": "1_Middleware/Driver/OSPI/drv_ospi.h",
       "source_sha256": "880ab085bab66778b405de4947c010671e72909617d9e5460fd62fc705c32d45",
-      "adapted_sha256": "03cd3103e11cf0bbc99735495ff89c3a1cf48bcdfc708db29198e5ea0a8535be"
+      "adapted_sha256": "f7f3839553eb54495f91598db78f398d84f01843c32f53a606d35171078efc1e"
     },
     {
       "path": "1_Middleware/Driver/SPI/drv_spi.cpp",
       "source_sha256": "35b6e6bb884a4056b31683f11a0edf2cb1683ec8ea4b3fb7bfd30d27995bdaeb",
-      "adapted_sha256": "419f509806b8c30170206d058c380f7e9b90b36ac8dc760c75e6547632e3332a"
+      "adapted_sha256": "bcce9a01eaf9df7b6cb61b576d92212b0a1174414f506ba7cc60a87ac112642f"
     },
     {
       "path": "1_Middleware/Driver/SPI/drv_spi.h",
       "source_sha256": "46e1ac1c4061859c17953027026979f6384eeb026200d753c603c7ccc02e65de",
-      "adapted_sha256": "c2cd3181f59d01dc15a596fab36c85c847603d1fde5fc3721a56fdfad9cf13b7"
+      "adapted_sha256": "dac5f2a2b54c6e55661e3e7a28f977bb8f4fb28b3bbc58f8d3b3cbb4298ad00c"
     },
     {
       "path": "1_Middleware/Driver/UART/drv_uart.cpp",
       "source_sha256": "90c78ea7c9eb5f2772e7ee4d25a9a0fa25748c767f8481714130a0c7578e19c1",
-      "adapted_sha256": "816d0b8c9d20c323845b1084a80a7f8fee8eada1a1ddb1cbccf6f87c46c7c43b"
+      "adapted_sha256": "5ef8934f6ed87508758c15c3fd2e90e19839809a2abd6b998e8e6626b6ea0def"
     },
     {
       "path": "1_Middleware/Driver/UART/drv_uart.h",

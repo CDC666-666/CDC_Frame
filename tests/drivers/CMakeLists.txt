@@ -19,6 +19,6 @@ set_source_files_properties(
     "${ROOT}/User_File/2_Device/Motor/Motor_DM/dvc_motor_dm.cpp"
     PROPERTIES COMPILE_OPTIONS "-Wno-error=switch")
 enable_testing()
-foreach(case_name can uart framing spi adc_watchdog flash plotters usb_routing motors)
+foreach(case_name can uart framing spi spi_async adc_watchdog flash plotters usb_routing motors)
   add_test(NAME driver_${case_name} COMMAND driver_tests ${case_name})
 endforeach()

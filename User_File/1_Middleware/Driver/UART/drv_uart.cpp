@@ -37,7 +37,8 @@ uint8_t Struct_UART_Manage_Object::Send(const uint8_t* data, uint16_t size) {
   if (size > uart_->write_port_->Capacity()) {
     return HAL_ERROR;
   }
-  const auto status = (*uart_->write_port_)({data, size}, write_);
+  const auto status = (*uart_->write_port_)({data, size}, write_,
+                                            frame_cdc::IsInterruptContext());
   if (status != LibXR::ErrorCode::OK) {
     transmit_failed.fetch_add(1);
   }

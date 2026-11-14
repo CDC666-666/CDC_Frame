@@ -7,6 +7,7 @@
 #include <cstring>
 #include <deque>
 #include <functional>
+#include <thread>
 #include <vector>
 
 enum HAL_StatusTypeDef { HAL_OK, HAL_ERROR, HAL_BUSY, HAL_TIMEOUT };
@@ -36,6 +37,9 @@ inline constexpr uint32_t HAL_OSPI_DATA_4_LINES = 4;
 inline constexpr uint32_t HAL_OSPI_MATCH_MODE_AND = 0;
 inline constexpr uint32_t HAL_OSPI_AUTOMATIC_STOP_ENABLE = 1;
 inline constexpr uint32_t HAL_OSPI_TIMEOUT_COUNTER_ENABLE = 1;
+inline constexpr uint32_t HAL_OSPI_STATE_READY = 2;
+inline constexpr uint32_t HAL_OSPI_STATE_ERROR = 0x200;
+inline constexpr uint32_t HAL_OSPI_ERROR_NONE = 0;
 struct OSPI_RegularCmdTypeDef {
   uint32_t OperationType = 0, FlashId = 0, Instruction = 0, InstructionMode = 0;
   uint32_t InstructionSize = 0, Address = 0, AddressMode = 0, AddressSize = 0;
@@ -48,6 +52,13 @@ struct OSPI_MemoryMappedTypeDef {
   uint32_t TimeOutActivation = 0, TimeOutPeriod = 0;
 };
 struct OSPI_HandleTypeDef {
+  enum class Pending { NONE, RECEIVE, TRANSMIT, POLL };
+  Pending pending = Pending::NONE;
+  uint8_t* pending_buffer = nullptr;
+  OSPI_AutoPollingTypeDef pending_poll{};
+  uint32_t state_polls = 0, poll_steps = 0;
+  uint32_t dma_receives = 0, dma_transmits = 0, it_polls = 0, aborts = 0;
+  bool stall = false;
   OSPI_RegularCmdTypeDef command;
   std::vector<OSPI_RegularCmdTypeDef> commands;
   std::vector<uint8_t> memory = std::vector<uint8_t>(8 * 1024 * 1024, 0xff);
@@ -117,8 +128,64 @@ inline HAL_StatusTypeDef HAL_OSPI_MemoryMapped(OSPI_HandleTypeDef* handle,
   return handle->result;
 }
 inline HAL_StatusTypeDef HAL_OSPI_Abort(OSPI_HandleTypeDef* handle) {
+  ++handle->aborts;
+  handle->pending = OSPI_HandleTypeDef::Pending::NONE;
   handle->mapped = false;
   return handle->result;
+}
+
+// MDMA替身延迟到状态观察后完成；输入句柄/缓冲，返回接受状态。
+inline HAL_StatusTypeDef HAL_OSPI_Receive_DMA(OSPI_HandleTypeDef* handle,
+                                              uint8_t* data) {
+  ++handle->dma_receives;
+  handle->pending = OSPI_HandleTypeDef::Pending::RECEIVE;
+  handle->pending_buffer = data;
+  handle->poll_steps = 0;
+  return handle->result;
+}
+// 启动发送模型；输入句柄/缓冲，不立刻修改Flash。
+inline HAL_StatusTypeDef HAL_OSPI_Transmit_DMA(OSPI_HandleTypeDef* handle,
+                                               uint8_t* data) {
+  ++handle->dma_transmits;
+  handle->pending = OSPI_HandleTypeDef::Pending::TRANSMIT;
+  handle->pending_buffer = data;
+  handle->poll_steps = 0;
+  return handle->result;
+}
+// 启动匹配模型；输入配置，延迟到状态观察后完成。
+inline HAL_StatusTypeDef HAL_OSPI_AutoPolling_IT(
+    OSPI_HandleTypeDef* handle, OSPI_AutoPollingTypeDef* config) {
+  ++handle->it_polls;
+  handle->pending = OSPI_HandleTypeDef::Pending::POLL;
+  handle->pending_poll = *config;
+  handle->poll_steps = 0;
+  return handle->result;
+}
+// 模拟HAL IRQ更新状态；输入句柄，返回是否完成，stall时保持在途。
+inline uint32_t HAL_OSPI_GetState(OSPI_HandleTypeDef* handle) {
+  ++handle->state_polls;
+  if (handle->pending == OSPI_HandleTypeDef::Pending::NONE) {
+    return HAL_OSPI_STATE_READY;
+  }
+  if (handle->stall || ++handle->poll_steps < 2) {
+    return 0x28;
+  }
+  using Pending = OSPI_HandleTypeDef::Pending;
+  const auto phase = handle->pending;
+  handle->pending = Pending::NONE;
+  if (phase == Pending::RECEIVE) {
+    HAL_OSPI_Receive(handle, handle->pending_buffer, 0);
+  } else if (phase == Pending::TRANSMIT) {
+    HAL_OSPI_Transmit(handle, handle->pending_buffer, 0);
+  } else if (HAL_OSPI_AutoPolling(handle, &handle->pending_poll, 0) != HAL_OK) {
+    handle->pending = phase;
+    return 0x48;
+  }
+  return HAL_OSPI_STATE_READY;
+}
+// 读取模型错误；输入句柄，返回HAL兼容错误位。
+inline uint32_t HAL_OSPI_GetError(OSPI_HandleTypeDef*) {
+  return HAL_OSPI_ERROR_NONE;
 }
 
 namespace LibXR {
@@ -184,11 +251,20 @@ class SPSCQueue {
   std::deque<T> values_;
 };
 class Semaphore {};
+class Thread {
+ public:
+  static void Sleep(uint32_t ms) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+  }
+};
 class ReadOperation {};
 class WriteOperation {
  public:
+  using Callback = LibXR::Callback<ErrorCode>;
+  Callback* callback = nullptr;
   WriteOperation() = default;
   WriteOperation(Semaphore&, uint32_t) {}
+  explicit WriteOperation(Callback& value) : callback(&value) {}
 };
 class ReadPort {
  public:
@@ -209,7 +285,7 @@ class WritePort {
   ErrorCode result = ErrorCode::OK;
   size_t Size() const { return bytes.size(); }
   size_t Capacity() const { return 128; }
-  ErrorCode operator()(ConstRawData data, WriteOperation&) {
+  ErrorCode operator()(ConstRawData data, WriteOperation&, bool = false) {
     if (result != ErrorCode::OK) {
       return result;
     }
@@ -248,20 +324,41 @@ class SPI {
   std::vector<uint8_t> sent;
   GPIO_TypeDef* cs = nullptr;
   bool cs_was_active = false;
-  ErrorCode Write(ConstRawData data, OperationRW& operation) {
-    return ReadAndWrite({nullptr, 0}, data, operation);
+  OperationRW::Callback* pending = nullptr;
+  RawData pending_read{};
+  ErrorCode Write(ConstRawData data, OperationRW& operation,
+                  bool in_isr = false) {
+    return ReadAndWrite({nullptr, 0}, data, operation, in_isr);
   }
-  ErrorCode ReadAndWrite(RawData read, ConstRawData write, OperationRW&) {
+  ErrorCode ReadAndWrite(RawData read, ConstRawData write, OperationRW& op,
+                         bool = false) {
     if (cs != nullptr) {
       cs_was_active = cs->state == GPIO_PIN_RESET;
     }
     const auto* bytes = static_cast<const uint8_t*>(write.addr_);
     sent.assign(bytes, bytes + write.size_);
+    if (op.callback != nullptr && result == ErrorCode::OK) {
+      pending = op.callback;
+      pending_read = read;
+      return result;
+    }
     for (size_t index = 0; index < read.size_; ++index) {
       static_cast<uint8_t*>(read.addr_)[index] =
           static_cast<uint8_t>(0x10 + index);
     }
     return result;
+  }
+  // 延迟DMA完成；输入是否ISR，先写接收区再执行借用回调。
+  void Complete(bool in_isr = true) {
+    auto* callback = pending;
+    pending = nullptr;
+    for (size_t index = 0; index < pending_read.size_; ++index) {
+      static_cast<uint8_t*>(pending_read.addr_)[index] =
+          static_cast<uint8_t>(0x10 + index);
+    }
+    if (callback != nullptr) {
+      callback->Run(in_isr, ErrorCode::OK);
+    }
   }
 };
 struct ADC {

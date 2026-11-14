@@ -1,6 +1,7 @@
 #ifndef FRAME_CDC_DRIVER_SPI_DRV_SPI_H_
 #define FRAME_CDC_DRIVER_SPI_DRV_SPI_H_
 
+#include <atomic>
 #include <cstdint>
 
 #include "1_Middleware/System/Timestamp/sys_timestamp.h"
@@ -28,16 +29,22 @@ struct Struct_SPI_Manage_Object {
   // 绑定已初始化SPI；输入接口引用，无输出，不配置HAL。
   void Bind(LibXR::SPI& spi);
   // 查询后端故障锁存；无输入，true表示需重启后才能继续事务。
-  bool faulted() const { return faulted_; }
-  // 执行完整事务；输入片选及命令/接收长度，返回最终状态，线程调用。
+  bool faulted() const { return faulted_.load(); }
+  // 查询在途事务；无输入，返回DMA/阻塞操作是否仍占用管理区。
+  bool busy() const { return busy_.load(); }
+  // 输入片选/阶段长度/上下文，线程BLOCK返回最终状态，ISR CALLBACK返回接受状态。
+  // 管理对象、回调及缓冲必须保留至完成；busy期间禁止修改发送区。
   uint8_t Transfer(GPIO_TypeDef* port, uint16_t pin, GPIO_PinState active,
-                   uint16_t tx_size, uint16_t rx_size);
+                   uint16_t tx_size, uint16_t rx_size, bool in_isr = false);
 
  private:
   LibXR::SPI* spi_ = nullptr;
   LibXR::Semaphore completed_;
-  bool busy_ = false;
-  bool faulted_ = false;
+  // 完成异步事务；输入ISR标志及结果，释放CS后同步分发设备回调。
+  void Complete(bool in_isr, LibXR::ErrorCode result);
+  LibXR::SPI::OperationRW::Callback completion_;
+  std::atomic<bool> busy_{false};
+  std::atomic<bool> faulted_{false};
 };
 
 // 发送事务；输入管理对象、片选与长度，输出完成状态。

@@ -175,6 +175,39 @@ void Spi() {
         "combined length bound");
 }
 
+// 核对异步提交与完成边界；无输入，验证CS、接收区、重入及ISR回调。
+void SpiAsync() {
+  GPIO_TypeDef cs;
+  LibXR::SPI backend;
+  backend.cs = &cs;
+  Struct_SPI_Manage_Object driver;
+  driver.Bind(backend);
+  driver.Tx_Buffer[0] = 0x80;
+  bool callback = false;
+  driver.on_receive = LibXR::Callback<>::Create(
+      [](bool in_isr, bool* value) {
+        Check(in_isr, "DMA completion context retained");
+        *value = true;
+      },
+      &callback);
+  Check(driver.Transfer(&cs, 1, GPIO_PIN_RESET, 1, 6, true) == HAL_OK,
+        "async admitted");
+  Check(driver.busy() && !callback && cs.state == GPIO_PIN_RESET &&
+            driver.Rx_Buffer[1] == 0,
+        "admission leaves CS and unread DMA buffer owned");
+  Check(driver.Transfer(&cs, 1, GPIO_PIN_RESET, 1, 6, true) == HAL_BUSY,
+        "overlapping transfer rejected");
+  backend.Complete();
+  Check(!driver.busy() && callback && cs.state == GPIO_PIN_SET &&
+            driver.Rx_Buffer[1] == 0x11,
+        "completion publishes data and releases CS");
+  Check(driver.Transfer(&cs, 1, GPIO_PIN_RESET, 1, 0, true) == HAL_OK &&
+            driver.busy() && cs.state == GPIO_PIN_RESET,
+        "transmit retains ownership until completion");
+  backend.Complete();
+  Check(!driver.busy() && cs.state == GPIO_PIN_SET, "transmit completes");
+}
+
 // 测试电压接口和复用看门狗；无输入。
 void AdcWatchdog() {
   LibXR::ADC adc;
@@ -213,6 +246,18 @@ void Flash() {
         "mapping ownership");
   Check(flash.Set_Sector_Erased(0) && backend.memory[252] == 0xff,
         "sector erase model");
+  Check(backend.dma_receives > 0 && backend.dma_transmits > 0 &&
+            backend.it_polls > 0 && backend.state_polls > backend.dma_receives,
+        "final data comes from delayed DMA and interrupt polling");
+  driver.transfer_timeout_ms = 3;
+  backend.stall = true;
+  const auto aborts = backend.aborts;
+  Check(!flash.Get_Buffer(0, 1) && driver.status == HAL_TIMEOUT &&
+            backend.aborts == aborts + 1 &&
+            backend.pending == OSPI_HandleTypeDef::Pending::NONE,
+        "lost completion times out and aborts before buffer reuse");
+  backend.stall = false;
+  Check(flash.Get_Buffer(0, 1), "successful abort permits next transaction");
   backend.result = HAL_TIMEOUT;
   const auto receives = backend.receives;
   Check(!flash.Get_Buffer(0, 1) && backend.receives == receives,
@@ -314,6 +359,8 @@ int main(int argc, char** argv) {
       Framing();
     } else if (name == "spi") {
       Spi();
+    } else if (name == "spi_async") {
+      SpiAsync();
     } else if (name == "adc_watchdog") {
       AdcWatchdog();
     } else if (name == "flash") {
