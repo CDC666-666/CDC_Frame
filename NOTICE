@@ -16,7 +16,7 @@ Drivers/STM32H7xx_HAL_Driver/
   Drivers/STM32H7xx_HAL_Driver/LICENSE.txt.
 
 Middlewares/Third_Party/FreeRTOS/Source/
-  FreeRTOS Kernel V10.3.1, Copyright (C) Amazon.com, Inc. or its affiliates.
+  FreeRTOS Kernel V10.6.2, Copyright (C) Amazon.com, Inc. or its affiliates.
   MIT License; see Middlewares/Third_Party/FreeRTOS/Source/LICENSE.
   CMSIS_RTOS/: CMSIS-RTOS v1 wrapper, portions Copyright STMicroelectronics and
   ARM Limited; BSD 3-Clause style terms as stated in the file headers.
@@ -32,3 +32,20 @@ STM32H723VGTX_FLASH.ld (project memory-layout adaptations retained)
 Middlewares/Third_Party/LibXR
   Git submodule, not part of this repository's files. LibXR is licensed under
   the Apache License 2.0; see its own LICENSE.
+
+User_File/1_Middleware/Algorithm/
+  Imported unchanged from the user-provided local dm02_test reference project.
+  Original author and USTC-RoboWalker copyright notices remain in each file.
+  No separate license covering these application algorithm files was found in
+  the supplied reference project. This repository's Apache-2.0 license does
+  not relicense those third-party files. Source hashes are recorded in
+  tools/reference_algorithms.json; documentation is in the central project docs.
+
+User_File/2_Device/ and User_File/1_Middleware/System/Timestamp/
+  Adapted from the same user-provided dm02_test reference. Original author and
+  USTC-RoboWalker notices are retained; W25Q64JV implementation was rewritten
+  with explicit bounded synchronous transactions. No separate application-code
+  license was found in that reference. Repository licensing does not relicense
+  these reference-derived files. Source and adapted hashes are recorded in
+  tools/reference_devices.json. Driver and task adapters retain reference file
+  names and compatible boundary names, with LibXR owning existing transports.

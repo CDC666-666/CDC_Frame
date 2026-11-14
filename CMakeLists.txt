@@ -70,6 +70,27 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 # Add LibXR
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/LibXR.CMake)
 
+# Imported pure algorithms: available to applications without starting any tasks.
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/dm02_algorithms.cmake)
+add_dm02_algorithms(${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${CMAKE_PROJECT_NAME} dm02_algorithms)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/dm02_devices.cmake)
+
+# Link-only validation image. This target is never flashed or built by default.
+add_executable(dm02_algorithms_link EXCLUDE_FROM_ALL
+    tests/algorithms/arm_link_main.cpp
+    tests/algorithms/algorithm_cases.cpp
+    Core/Startup/startup_stm32h723vgtx.s
+    Core/Src/system_stm32h7xx.c
+)
+target_link_libraries(dm02_algorithms_link PRIVATE dm02_algorithms stm32cubemx)
+target_compile_features(dm02_algorithms_link PRIVATE cxx_std_20)
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/validation")
+set_target_properties(dm02_algorithms_link PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/validation")
+target_link_options(dm02_algorithms_link PRIVATE --specs=nosys.specs
+    "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/validation/dm02_algorithms_link.map")
+
 # Prints the section sizes
 function(print_section_sizes TARGET)
   # Build Events command

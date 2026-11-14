@@ -5,13 +5,13 @@ software_timer:
   stack_depth: 1024
 SPI:
   spi2:
-    tx_buffer_size: 32
-    rx_buffer_size: 32
+    tx_buffer_size: 512
+    rx_buffer_size: 512
     dma_section: .axi_ram
     dma_enable_min_size: 3
   spi6:
-    tx_buffer_size: 32
-    rx_buffer_size: 32
+    tx_buffer_size: 512
+    rx_buffer_size: 512
     dma_section: .ram_d3
     dma_enable_min_size: 3
 USART:
@@ -75,11 +75,11 @@ USB:
     product: MainCtrl
     serial: QDU-Future-MainCtrl-
 Terminal:
-  read_buff_size: 32
-  max_line_size: 32
-  max_arg_number: 5
+  read_buff_size: 64
+  max_line_size: 96
+  max_arg_number: 8
   max_history_number: 5
-  run_as_thread: true
+  run_as_thread: false
   thread_stack_depth: 2048
   thread_priority: 2
 database:

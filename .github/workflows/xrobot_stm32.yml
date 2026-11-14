@@ -34,10 +34,18 @@ jobs:
           python tools/regenerate.py --libxr-only
           git diff --exit-code -- User/app_main.cpp User/app_main.h User/flash_map.hpp User/libxr_config.yaml cmake/LibXR.CMake
           python tools/check_baseline.py
+          python tools/check_algorithm_import.py
+          python tools/check_reference_devices.py
+      - name: Run driver protocol tests on host
+        run: |
+          cmake -S tests/drivers -B build/driver-tests -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.preset }}
+          cmake --build build/driver-tests --parallel 4
+          ctest --test-dir build/driver-tests --output-on-failure --output-junit results.xml
       - name: Build firmware
         run: |
           cmake --preset ${{ matrix.preset }}
           cmake --build --preset ${{ matrix.preset }} --parallel 4
+          cmake --build build/${{ matrix.preset }} --target dm02_algorithms_link --parallel 4
       - uses: actions/upload-artifact@v4
         with:
           name: dm02_test-${{ matrix.preset }}
@@ -46,3 +54,4 @@ jobs:
             build/${{ matrix.preset }}/dm02_test.hex
             build/${{ matrix.preset }}/dm02_test.bin
             build/${{ matrix.preset }}/dm02_test.map
+            build/${{ matrix.preset }}/validation/dm02_algorithms_link.elf

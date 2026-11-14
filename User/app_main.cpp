@@ -23,6 +23,9 @@
 using namespace LibXR;
 
 /* User Code Begin 1 */
+#include <memory>
+
+#include "4_Task/tsk_config_and_callback.h"
 /* User Code End 1 */
 
 extern ADC_HandleTypeDef hadc1;
@@ -48,10 +51,10 @@ extern UART_HandleTypeDef huart10;
 
 // DMA buffers (STM32H723VG: D-cache, 32-byte lines)
 alignas(32) static uint16_t adc1_buf[64] __attribute__((section(".axi_ram")));
-alignas(32) static uint8_t spi2_rx_buf[32] __attribute__((section(".axi_ram")));
-alignas(32) static uint8_t spi2_tx_buf[32] __attribute__((section(".axi_ram")));
-alignas(32) static uint8_t spi6_rx_buf[32] __attribute__((section(".ram_d3")));
-alignas(32) static uint8_t spi6_tx_buf[32] __attribute__((section(".ram_d3")));
+alignas(32) static uint8_t spi2_rx_buf[512] __attribute__((section(".axi_ram")));
+alignas(32) static uint8_t spi2_tx_buf[512] __attribute__((section(".axi_ram")));
+alignas(32) static uint8_t spi6_rx_buf[512] __attribute__((section(".ram_d3")));
+alignas(32) static uint8_t spi6_tx_buf[512] __attribute__((section(".ram_d3")));
 alignas(32) static uint8_t uart5_rx_buf[128] __attribute__((section(".axi_ram")));
 alignas(32) static uint8_t uart7_rx_buf[128] __attribute__((section(".axi_ram")));
 alignas(32) static uint8_t uart7_tx_buf[128] __attribute__((section(".axi_ram")));
@@ -152,10 +155,10 @@ extern "C" void app_main(void)
   STDIO::read_ = usb_otg_hs_cdc.read_port_;
   STDIO::write_ = usb_otg_hs_cdc.write_port_;
   static RamFS ramfs("XRobot");
-  static Terminal<32, 32, 5, 5> terminal(ramfs);
-  static Thread term_thread;
-  term_thread.Create(&terminal, terminal.ThreadFun, "terminal", 2048,
-                     Thread::Priority::MEDIUM);
+  static Terminal<64, 96, 8, 5> terminal(ramfs);
+  static auto terminal_task = Timer::CreateTask(terminal.TaskFun, &terminal, 10);
+  Timer::Add(terminal_task);
+  Timer::Start(terminal_task);
 
   // Flash and database
   static STM32Flash flash(FLASH_REGIONS, FLASH_REGION_NUMBER);
@@ -217,11 +220,17 @@ extern "C" void app_main(void)
 
   XR_REGISTER(ramfs, LibXR::RamFS);
 
-  XR_REGISTER(terminal, LibXR::Terminal<32, 32, 5, 5>);
+  XR_REGISTER(terminal, LibXR::Terminal<64, 96, 8, 5>);
 
   XR_REGISTER(database, LibXR::Database);
 
   /* User Code Begin 3 */
+  auto reference = std::make_unique<frame_cdc::ReferenceApplication>(
+      frame_cdc::ReferenceHardware{can1, uart7, usb_otg_hs_cdc, spi2, spi6,
+                                  adc1_adc_channel_4, pwm_tim3_ch4, pwm_tim12_ch2,
+                                  BMI088_ACCEL_INTERRUPT, BMI088_GYRO_INTERRUPT,
+                                  hospi2, ramfs, terminal});
+  REQUIRE(reference->Start());
   /* User Code End 3 */
   XROBOT_MAIN();
 }

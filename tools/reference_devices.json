@@ -1,0 +1,256 @@
+{
+  "reference": "user-supplied dm02_test/User_File; algorithms audited separately",
+  "date": "2026-11-14",
+  "files": [
+    {
+      "path": "1_Middleware/Driver/ADC/drv_adc.cpp",
+      "source_sha256": "bd4d83e6832bfaa7f731c8c9eba7a3e8b937585eff038e03249c89dd7bbac876",
+      "adapted_sha256": "548945765e34887f35f4e822c1c900f90f93fc8b7eee961f85acde48de79bd0d"
+    },
+    {
+      "path": "1_Middleware/Driver/ADC/drv_adc.h",
+      "source_sha256": "ef56a9c7cf9b99c01a6bba1c0341f07cefd50c0e77fcd322713d996fcf84ecdc",
+      "adapted_sha256": "6b665c5a16719ce214989174e9ea2bc91854f868af5de61bf29b92bab845f37d"
+    },
+    {
+      "path": "1_Middleware/Driver/CAN/drv_can.cpp",
+      "source_sha256": "7ff43b1c346f8e86a7bcf179813e512c959556e6133e8308392d988316ed0f76",
+      "adapted_sha256": "5990c58df91f47b75c071f98df43516a773c0a5e9076acc40a722608401fd554"
+    },
+    {
+      "path": "1_Middleware/Driver/CAN/drv_can.h",
+      "source_sha256": "403c56086daa6aa4215282f0e00c47760355d674eae33f2b9ee56e4e445a8b04",
+      "adapted_sha256": "43194b3067f253bda63967719555a6f10f61389fd962841a91eb5ea7a1d7649d"
+    },
+    {
+      "path": "1_Middleware/Driver/OSPI/drv_ospi.cpp",
+      "source_sha256": "41244a05490247f113511a38119a4ef6ea36d8e8c827ee5b2bf8c3e8aab1e272",
+      "adapted_sha256": "a50e9cf41002b9ba86a0b00325856a0a4fa845ebb397db7e6a1814a83d03f418"
+    },
+    {
+      "path": "1_Middleware/Driver/OSPI/drv_ospi.h",
+      "source_sha256": "880ab085bab66778b405de4947c010671e72909617d9e5460fd62fc705c32d45",
+      "adapted_sha256": "03cd3103e11cf0bbc99735495ff89c3a1cf48bcdfc708db29198e5ea0a8535be"
+    },
+    {
+      "path": "1_Middleware/Driver/SPI/drv_spi.cpp",
+      "source_sha256": "35b6e6bb884a4056b31683f11a0edf2cb1683ec8ea4b3fb7bfd30d27995bdaeb",
+      "adapted_sha256": "419f509806b8c30170206d058c380f7e9b90b36ac8dc760c75e6547632e3332a"
+    },
+    {
+      "path": "1_Middleware/Driver/SPI/drv_spi.h",
+      "source_sha256": "46e1ac1c4061859c17953027026979f6384eeb026200d753c603c7ccc02e65de",
+      "adapted_sha256": "c2cd3181f59d01dc15a596fab36c85c847603d1fde5fc3721a56fdfad9cf13b7"
+    },
+    {
+      "path": "1_Middleware/Driver/UART/drv_uart.cpp",
+      "source_sha256": "90c78ea7c9eb5f2772e7ee4d25a9a0fa25748c767f8481714130a0c7578e19c1",
+      "adapted_sha256": "816d0b8c9d20c323845b1084a80a7f8fee8eada1a1ddb1cbccf6f87c46c7c43b"
+    },
+    {
+      "path": "1_Middleware/Driver/UART/drv_uart.h",
+      "source_sha256": "1b320997f90cce6049b93e95fb842bac9ce2a6ffdbdcb9e3c903ca11a8c1afbd",
+      "adapted_sha256": "fda198ceb815ec453751ff32ffc6ff9528ff7642ffa74375deec3b5b6b0725ab"
+    },
+    {
+      "path": "1_Middleware/Driver/USB/drv_usb.cpp",
+      "source_sha256": "46e4a08573c1790d3290c20e97293066b5f2d8586b96ab830b4b4f7e0cde0056",
+      "adapted_sha256": "0f3eac9d5a2e75abad460db629f4579a57988d7a96f5e70b994d8e35368b7876"
+    },
+    {
+      "path": "1_Middleware/Driver/USB/drv_usb.h",
+      "source_sha256": "68dbf123ce4f4e981c59b08e21476d488c2c65ea2603f3bd42dc144698471528",
+      "adapted_sha256": "fcb04190b6737a9bb2b07b7a678a27d01c2a0aacd6d6c30591d3c5f8dabdd679"
+    },
+    {
+      "path": "1_Middleware/Driver/WDG/drv_wdg.cpp",
+      "source_sha256": "e9229bc43c55b324ca8fcc59c27f9042cad99af1c265b3ec1e9825fa7612bde9",
+      "adapted_sha256": "5e010c9ffbfd79b35d4b3a7a6620e08ec505b0c16d6b91729d947f7354ead828"
+    },
+    {
+      "path": "1_Middleware/Driver/WDG/drv_wdg.h",
+      "source_sha256": "5324d85c524b34795c51ac5ed970396dfd766d23bce444e0c8019a0f4b4fd3f7",
+      "adapted_sha256": "bf223b331a795d14b76015c651d5d0484f9ab8f8ff025b6a2513d0dc6da047bc"
+    },
+    {
+      "path": "1_Middleware/System/Timestamp/sys_timestamp.cpp",
+      "source_sha256": "42bad6072758a7eedd1d461b89b6cc681076f7bafd8cac73a4049bc4e0f900b2",
+      "adapted_sha256": "88376a9e773cbcc8ce9be6d0a64214cd88284b50353ab564e3ebf918076ddff4"
+    },
+    {
+      "path": "1_Middleware/System/Timestamp/sys_timestamp.h",
+      "source_sha256": "bfb4fab7e53a014d03739cc98b43837916c656bed98ae5b268b9122d122f8d72",
+      "adapted_sha256": "30a0ce70697177df8bc983192ea05bf09d40b4c32f85bd65943941f5026a5c87"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/Accel/bsp_bmi088_accel.cpp",
+      "source_sha256": "ffb6bba1d718f04fc9b042a13be4bbaaa722eef9365b5591b1da608147ae9985",
+      "adapted_sha256": "7a5d38b320c119ca3b3fda28a1f1b93ce5db28e8b11c0e343df60e44c397f997"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/Accel/bsp_bmi088_accel.h",
+      "source_sha256": "3403f843f472266eb67551d3645e35537b307f28a1e7e23cbcd4bc0b5b10d0f1",
+      "adapted_sha256": "0f3f5db94c9a76d566124b6245d517235f8889e899cd2f794fac661791aa22f2"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/Accel/bsp_bmi088_accel_register.cpp",
+      "source_sha256": "b3fadace303d6131cea54fbff9a40436c9524f3ad0d02abc238648d3488f0546",
+      "adapted_sha256": "b3fadace303d6131cea54fbff9a40436c9524f3ad0d02abc238648d3488f0546"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/Accel/bsp_bmi088_accel_register.h",
+      "source_sha256": "33128016f59a7917e588d2c273c36692b079588481374c1c9176f85fc461fbc7",
+      "adapted_sha256": "33128016f59a7917e588d2c273c36692b079588481374c1c9176f85fc461fbc7"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/bsp_bmi088.cpp",
+      "source_sha256": "065beae6aad0f38f0692299c87b621083407e7b8dc3dbf7210cc024b5c31e777",
+      "adapted_sha256": "e4b0c24c72d6569571d41760c62d49496d7d2d3f15880dae8f311c687439cf5b"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/bsp_bmi088.h",
+      "source_sha256": "6402a5b6a03fd6ad4abfbd4eb0bbefb409f344b37a83666c8edca47ce9ab8dae",
+      "adapted_sha256": "58aa2fc987609277eee353dc4509c65f9723aff71f2b31c6737429eaea8e2d12"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/Gyro/bsp_bmi088_gyro.cpp",
+      "source_sha256": "f3ef968ea72765aaf432e1fe7ed161695ff389f116d6c7f6ba5a6c78216cd79c",
+      "adapted_sha256": "053320550693a4dc18fd88b9a3f55bb51020d24994741aba0a74917466deff60"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/Gyro/bsp_bmi088_gyro.h",
+      "source_sha256": "d50642192b1f14983be5a8079e6e2358da9eda53625763fae85b61f79fea2eab",
+      "adapted_sha256": "8421107890aa02ef872081dbec4740881e21f7defa9af993c2484be67cdd3f18"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/Gyro/bsp_bmi088_gyro_register.cpp",
+      "source_sha256": "6c49df39972a8f6e40eb82c3954705172b898c0a60fb6cd6b39101f7e3eb19eb",
+      "adapted_sha256": "6c49df39972a8f6e40eb82c3954705172b898c0a60fb6cd6b39101f7e3eb19eb"
+    },
+    {
+      "path": "2_Device/BSP/BMI088/Gyro/bsp_bmi088_gyro_register.h",
+      "source_sha256": "7f39d8c46cba39c6fe8b3f7242fba8092ef2b26b666205ba9558742ec21f319c",
+      "adapted_sha256": "7f39d8c46cba39c6fe8b3f7242fba8092ef2b26b666205ba9558742ec21f319c"
+    },
+    {
+      "path": "2_Device/BSP/Buzzer/bsp_buzzer.cpp",
+      "source_sha256": "cc605debcbfb06c94bfb92f7a9b4e7326a41d90d58131ad61338d4a504da3d61",
+      "adapted_sha256": "dfc7542a53edda90f351a0c35d9f9d2509e0d8f88bedd560700b05c61ec0b819"
+    },
+    {
+      "path": "2_Device/BSP/Buzzer/bsp_buzzer.h",
+      "source_sha256": "8e11381f82599b42b2e883c56fe920ec0b2386487cd6b1cd6f679557df8d034c",
+      "adapted_sha256": "bccd2e32157d9c94aa6c794dcf97e8fea7bd56f3fd1f07aca31d091cf6c034e6"
+    },
+    {
+      "path": "2_Device/BSP/Key/bsp_key.cpp",
+      "source_sha256": "7286b43374e4a478618a19a0ebd99d4677f094a13b461840a8664a9f7ac38234",
+      "adapted_sha256": "3c87b0003501b3da690afd67743687c586aec134d50df6c7864d23827dd10bec"
+    },
+    {
+      "path": "2_Device/BSP/Key/bsp_key.h",
+      "source_sha256": "3b9c8b0d1e1e86976116a92654f575fb294ecf684ca9e07f91e9832308e2766b",
+      "adapted_sha256": "659b1d493d073f27da47b249c770fa36084301354605efe79c9772f13f17d293"
+    },
+    {
+      "path": "2_Device/BSP/Power/bsp_power.cpp",
+      "source_sha256": "4ed23e2a710d05ac46522a02daaac5b3dd6af935555dfeb32e6108c59f2404a8",
+      "adapted_sha256": "d4d0face3816e3530e39dae8b11950ac8b950027252786180a4e9292c92708ac"
+    },
+    {
+      "path": "2_Device/BSP/Power/bsp_power.h",
+      "source_sha256": "21120f24c3b96873296ce73e276a0291ca677a5c85da280a18f290647a53a13a",
+      "adapted_sha256": "109f7bef91c06f8b130f1f02c8af470a7b2d6845fe89fe52429d76cda01cd58b"
+    },
+    {
+      "path": "2_Device/BSP/W25Q64JV/bsp_w25q64jv.cpp",
+      "source_sha256": "8ea40d8d1dd8cfd21fd266b073ec44fd349dbb870fdfd7f9684ab4cd6a0d90ac",
+      "adapted_sha256": "912c0583da6714ba07c35b2f6d7194f069037cdc6ad26001b05b0a0fa8b5cc1f"
+    },
+    {
+      "path": "2_Device/BSP/W25Q64JV/bsp_w25q64jv.h",
+      "source_sha256": "6f9f12c1020678c3f1230d45841aeddcbc51bb4067ed4681eddc85228a38f795",
+      "adapted_sha256": "70f584637f02042a85e4eb706c9255fd927116d5ed83157a5b08a7fc39283296"
+    },
+    {
+      "path": "2_Device/BSP/W25Q64JV/bsp_w25q64jv_register.cpp",
+      "source_sha256": "2a101223fe60707328b1aacdcbdee33b67aa93da77bfa3d9d3f59af5b047e4e6",
+      "adapted_sha256": "2a101223fe60707328b1aacdcbdee33b67aa93da77bfa3d9d3f59af5b047e4e6"
+    },
+    {
+      "path": "2_Device/BSP/W25Q64JV/bsp_w25q64jv_register.h",
+      "source_sha256": "a8643288987829519c2aec42a090e84cb4eb715ccc72c10a5c9bb943197dcc8e",
+      "adapted_sha256": "a8643288987829519c2aec42a090e84cb4eb715ccc72c10a5c9bb943197dcc8e"
+    },
+    {
+      "path": "2_Device/BSP/WS2812/bsp_ws2812.cpp",
+      "source_sha256": "99c51234074bdc1a29d9770487234e04ed6360e51b63d9b6439d0d6d62596f23",
+      "adapted_sha256": "cd03d555c74a5d7b0bf6698f5bb4750c5f4c7deffcde447b741d0d01f7c216ae"
+    },
+    {
+      "path": "2_Device/BSP/WS2812/bsp_ws2812.h",
+      "source_sha256": "2689c080bb9e0479202ddd7d6e9a2602d0c793eb979ffd8345ae33a27cd877ba",
+      "adapted_sha256": "185e48b9a937371185a0c82d0df9ae7d74376beaa14cd0d58441ed2f224263ef"
+    },
+    {
+      "path": "2_Device/Motor/Motor_DJI/dvc_motor_dji.cpp",
+      "source_sha256": "f353c22e15ab05804d6ce1d7ed384cac862175b8370ce18dfd961d586872e913",
+      "adapted_sha256": "54e494c57784087af4331e87a45811e25471fec243df4769b4fc7f6c4bfa48c5"
+    },
+    {
+      "path": "2_Device/Motor/Motor_DJI/dvc_motor_dji.h",
+      "source_sha256": "079413be5162f68bead3fa942d98164b542aee6b643b915108358a0b83ee438e",
+      "adapted_sha256": "0038b534ad1563e5e9364724586e0e420a6bb276ac8ce39d09dd2486c4d31e59"
+    },
+    {
+      "path": "2_Device/Motor/Motor_DM/dvc_motor_dm.cpp",
+      "source_sha256": "5b8df9980cc6cf31b2f57cf51164ce27ef93fd50c21b20cdff3f232d924330f1",
+      "adapted_sha256": "61bd9f95893da912ba9d956c63fb1ac48138127f515a5808affe5e181f263c09"
+    },
+    {
+      "path": "2_Device/Motor/Motor_DM/dvc_motor_dm.h",
+      "source_sha256": "1b222ac400afe6aca7f8438ab70898cac93094e28702b62c4b4df4e05a6b17bd",
+      "adapted_sha256": "8d25e63bae7dd45190a3a938fd07501530a913f8f9e37f81726d9ff9cc26a7be"
+    },
+    {
+      "path": "2_Device/Plotter/Serialplot/dvc_serialplot.cpp",
+      "source_sha256": "c47b9e63084f14b7a0d3e1e923fb9e570e2286854656bc48732db236db1f113f",
+      "adapted_sha256": "1ee1b621aedbf959d59f928404aedbafa0f3448dfc0f939ba786822e445029ae"
+    },
+    {
+      "path": "2_Device/Plotter/Serialplot/dvc_serialplot.h",
+      "source_sha256": "f7dff9a548c34a44f4b0d642aa0383b51ac958696a33ce19399ad32d26fd6f42",
+      "adapted_sha256": "e6668eda44641fd0cea09f0523f853b8ef09cc3c4d1b0ec06c37ae2c66fb90d6"
+    },
+    {
+      "path": "2_Device/Plotter/Vofa/dvc_vofa.cpp",
+      "source_sha256": "aaa333371fd30e3e0ab41e16c66b7b12f62570dd6f17812bd4efb74234dc29f2",
+      "adapted_sha256": "526e35048e1c250cbb90102bde42136e4a17cce0e06a285bc4b4a15faff2e558"
+    },
+    {
+      "path": "2_Device/Plotter/Vofa/dvc_vofa.h",
+      "source_sha256": "4120f6eabb2bf9f697826d6896a09d8af3057e1e3ca432f235ea9a96458254bc",
+      "adapted_sha256": "42cdcd0261151fc89eaff3d7c8b9c27e6aa7c6dd64d33014d36aede1eef9e199"
+    },
+    {
+      "path": "2_Device/Powermeter/dvc_powermeter.cpp",
+      "source_sha256": "9fc3be91ec110f19855d4c840319e62d12cd41634438f0524ae166fb29fb8d96",
+      "adapted_sha256": "6e13c68a8ecc4d4e877f3f94d4f480574201987f6d3818539475678f191dffa6"
+    },
+    {
+      "path": "2_Device/Powermeter/dvc_powermeter.h",
+      "source_sha256": "9ba6605ce3ed6edccaab890a627931712124d4db7d81d8cb3d3c43494ca60103",
+      "adapted_sha256": "1e2de15db309970712b025bbe873ca5412d1f5a8c0bd6378ff5f5d01ca4593cd"
+    },
+    {
+      "path": "4_Task/tsk_config_and_callback.cpp",
+      "source_sha256": "a09ae23e1abef86407f79c454f310aa0533a13bb85b083f75e6cf64d5e65a2ec",
+      "adapted_sha256": "4af7bb6561a89440134f9a38140b3094e47ae7fdd6ff95f23d1989a6d1ff80f1"
+    },
+    {
+      "path": "4_Task/tsk_config_and_callback.h",
+      "source_sha256": "d7cf830c5189413ef6fb56a9478fd1511944b4cb11f5e4d150c25232ab5c67d2",
+      "adapted_sha256": "f879e25cb546a4c0bf92117beef3b6aeac7fbe4413be6244e9de89c8803c8c46"
+    }
+  ]
+}

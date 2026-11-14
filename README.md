@@ -2,7 +2,7 @@
 
 工程位于 `bsp-dev-mc02`，当前 CubeMX 工程及固件名称为 `dm02_test`。MCU 为 STM32H723VGT6；外设配置以指定的本地 `damiao_mc02_bsp-main/damiao_mc02_bsp-main/dm02_test` 为参考。
 
-本次只迁移 CubeMX 配置和生成层，保留 FreeRTOS、LibXR/XRobot。参考工程的 User_File、算法、设备库、IMU 温控和电机示例均未导入。配置与编译通过不代表已经上板验证。
+底层配置和生成层已按参考对齐，保留 FreeRTOS、LibXR/XRobot；随后按原接口导入了11类纯算法。参考设备库、IMU 温控、电机示例和任务均未导入。算法仍有已记录且未修复的问题；配置、编译和已覆盖的数值测试不代表已经上板验证。
 
 ## 配置与运行入口
 
@@ -63,6 +63,18 @@ cmake --build --preset Release
 
 CI 使用同一 GPIO 名称适配入口，检查生成一致性及参考配置后构建 Debug/Release。只上传构建产物，不自动发布或烧录；远端 CI 结果与本机编译结果分别记录。
 
+## 纯算法库
+
+`User_File/1_Middleware/Algorithm` 按参考工程原目录和文件名保存11类纯算法，原接口、float计算和22份源码字节均保留。应用可直接包含 `1_Middleware/Algorithm/...`；独立静态库 `dm02_algorithms` 已接入构建，参考设备及Kalman演示使用其中算法。后续迁入的参考功能也沿用参考目录和命名。
+
+原算法中已发现计算缺陷、未初始化读取、越界与接口限制，按用户决定原样保留。11组常规测试通过不等于全部算法正确；13组缺陷/限制诊断维持真实失败。运行步骤见 [测试说明](../../readme/框架/ALGORITHM_TESTS.md)，逐项问题和证据见 [算法迁移说明](../../readme/框架/ALGORITHM_MIGRATION_20261114.md)。User_File只保留功能代码，说明统一在集中资料目录。
+
 ## 许可与来源
 
-现有 BSP 许可为 Apache-2.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。新增外设配置参考用户指定的本地 dm02_test；本次没有复制其自有算法或设备实现。项目规范与当前开发记录见 [集中入口](../../readme/框架/PROJECT_CONTEXT.md)。
+现有 BSP 许可为 Apache-2.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。新增外设配置、算法及设备参考用户指定的本地 dm02_test，保留原有版权声明；原参考应用文件未发现独立许可，不能用本仓库许可替代其授权。项目规范与当前开发记录见 [集中入口](../../readme/框架/PROJECT_CONTEXT.md)。
+
+## 参考设备与驱动
+
+`User_File`完整对应唯一参考的72个文件名/层级：22份算法原件、50份Driver/System/设备/任务适配。`ReferenceApplication`持有设备状态并接入现有LibXR后端；USB只有一个物理读者，终端和`q00/q11/r00/r11`调参由有界分流器处理。`ref`提供状态、IMU/加热、绘图、板载设备、GM6020和Flash维护命令，启动默认不运行IMU、加热、电机或Flash操作。
+
+功能清单、调用边界、命令及待实板验收项见 [使用说明](../../readme/框架/USER_FILE_README.md)。适配快照由`tools/check_reference_devices.py`校验；主机协议测试位于`tests/drivers`，HAL/LibXR替身通过不代表真实DMA、时序或外设通过。当前实测与限制只以集中状态为准。

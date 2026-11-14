@@ -1,3 +1,12 @@
 * text=auto
 *.sh text eol=lf
 *.bat text eol=crlf
+
+# Preserve the original algorithm bytes without metadata in User_File.
+User_File/1_Middleware/Algorithm/** -text
+
+# Keep adapted snapshot hashes stable across Windows/Linux checkouts.
+User_File/1_Middleware/Driver/** text eol=lf
+User_File/1_Middleware/System/** text eol=lf
+User_File/2_Device/** text eol=lf
+User_File/4_Task/** text eol=lf
