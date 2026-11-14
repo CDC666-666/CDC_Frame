@@ -3,9 +3,8 @@
 # ---- Project settings --------------------------------------------------------
 set(LIBXR_SYSTEM FreeRTOS)
 set(LIBXR_DRIVER st)
-set(XROBOT_MODULES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Modules")
 # User sources of the application; "" when CMakeLists.txt adds them itself.
-set(LIBXR_USER_SOURCES_GLOB "${CMAKE_CURRENT_SOURCE_DIR}/User/*.cpp")
+set(LIBXR_USER_SOURCES_GLOB "${CMAKE_CURRENT_SOURCE_DIR}/User_File/4_Task/User/*.cpp")
 # Optimization level of the application in Debug builds and of everything in Release builds;
 # "" keeps the level of the toolchain file.
 set(LIBXR_OPT_DEBUG "-Og")
@@ -17,8 +16,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(LIBXR_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/Third_Party/LibXR"
     CACHE PATH "LibXR source directory")
 add_subdirectory("${LIBXR_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/LibXR")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/xrobot_layout.cmake")
 target_link_libraries(xr PUBLIC stm32cubemx)
-target_include_directories(xr PUBLIC Core/Inc User)
+target_include_directories(xr PUBLIC Core/Inc User_File/4_Task/User)
 target_compile_features(xr PUBLIC cxx_std_20)
 
 # ---- Application -------------------------------------------------------------

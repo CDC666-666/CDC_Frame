@@ -42,7 +42,7 @@ def main():
     main_text = (project / "Core/Src/main.c").read_text(encoding="utf-8")
     freertos = (project / "Core/Src/freertos.c").read_text(encoding="utf-8")
     config = (project / "Core/Inc/FreeRTOSConfig.h").read_text(encoding="utf-8")
-    app = (project / "User/app_main.cpp").read_text(encoding="utf-8")
+    app = (project / "User_File/4_Task/User/app_main.cpp").read_text(encoding="utf-8")
     require("osKernelStart();" in main_text and "MX_FREERTOS_Init();" in main_text, "RTOS startup missing")
     require("app_main();" in freertos and "libxr_fatal_error" in freertos, "RTOS integration hooks missing")
     require(re.findall(r"^#define configUSE_TIMERS\s+(\d+)", config, re.M)[-1] == "0", "FreeRTOS software timers unexpectedly enabled")

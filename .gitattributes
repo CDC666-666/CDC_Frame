@@ -10,3 +10,4 @@ User_File/1_Middleware/Driver/** text eol=lf
 User_File/1_Middleware/System/** text eol=lf
 User_File/2_Device/** text eol=lf
 User_File/4_Task/** text eol=lf
+User_File/3_Modules/*.yaml text eol=lf

@@ -3,6 +3,8 @@ version: 1
 requests:
 - id: xrobot-org/BuzzerAlarm
   ref: same-or-dev
+- id: xrobot-org/DurationStatistics
+  ref: 79eb346bacec419c6c34c19183c6bab0f2225b6d
 modules:
   xrobot-org/BuzzerAlarm:
     repo: https://github.com/xrobot-org/BuzzerAlarm.git
@@ -11,3 +13,10 @@ modules:
     resolved_ref: master
     ref_kind: branch
     commit: a7c17cf7b1d10409848c32bd420cb393515e7f27
+  xrobot-org/DurationStatistics:
+    repo: https://github.com/xrobot-org/DurationStatistics.git
+    source: https://xrobot.work/xrobot-modules/index.yaml
+    requested: 79eb346bacec419c6c34c19183c6bab0f2225b6d
+    resolved_ref: 79eb346bacec419c6c34c19183c6bab0f2225b6d
+    ref_kind: commit
+    commit: 79eb346bacec419c6c34c19183c6bab0f2225b6d

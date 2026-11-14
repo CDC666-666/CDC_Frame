@@ -49,3 +49,9 @@ User_File/2_Device/ and User_File/1_Middleware/System/Timestamp/
   these reference-derived files. Source and adapted hashes are recorded in
   tools/reference_devices.json. Driver and task adapters retain reference file
   names and compatible boundary names, with LibXR owning existing transports.
+
+User_File/3_Modules/xrobot-org/DurationStatistics/ (restored by xrobot setup)
+  Official XRobot duration statistics library, locked at
+  79eb346bacec419c6c34c19183c6bab0f2225b6d. Apache License 2.0;
+  see the module's own LICENSE. BMI088 and W25QXX official sources are design
+  references; their implementations have not replaced the reference devices.

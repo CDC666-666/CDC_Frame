@@ -1,0 +1,4 @@
+xrobot: 1.0.1
+modules:
+- xrobot-org/BuzzerAlarm@same-or-dev
+- xrobot-org/DurationStatistics@79eb346bacec419c6c34c19183c6bab0f2225b6d

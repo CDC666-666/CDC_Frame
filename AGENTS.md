@@ -5,3 +5,5 @@
 - 自有代码采用 C++，当前 CMake 声明 C++20。Google C++ 风格加项目补充：禁止自定义业务宏和全局变量，枚举值使用大写下划线，常量与变量同风格命名，类成员以下划线结尾；具体边界以 CPP_STYLE 为准。
 - 使用本仓库 `.clang-format`，只格式化明确选中的自有文件。CubeMX、HAL、CMSIS、FreeRTOS、LibXR/XRobot 及自动生成模块保持上游接口和风格，不全仓重排、不将 C 文件直接改后缀。
 - 保留用户修改；没有授权不提交、推送、烧录或驱动电机。有实质进展后更新同一集中状态。
+
+2026-11-15起，功能开发必须读取本地[xrobot skill](../.agents/skills/xrobot/SKILL.md)及任务相关references，核对官方开源网站和固定源码后实施。目录、模块配置和CLI适配见[模块组织](../../readme/框架/MODULE_ORGANIZATION.md)：User_File/3_Modules、User_File/4_Task/User；通过tools/xrobot_project.py运行官方CLI，完整再生成仍用tools/regenerate.py。不得凭旧根Modules/User路径绕过适配。

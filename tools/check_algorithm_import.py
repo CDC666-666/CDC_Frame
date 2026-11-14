@@ -18,6 +18,7 @@ def main():
                          if expected.get(name) != actual.get(name))
     forbidden = sorted(path.relative_to(user_file).as_posix()
                        for path in user_file.rglob("*") if path.is_file()
+                       and not path.is_relative_to(user_file / "3_Modules/xrobot-org")
                        and (path.name.casefold().startswith("readme") or path.name in
                             (".gitattributes", "SOURCE_MANIFEST.json")))
     print(json.dumps({"reference_files": len(expected), "differences": differences,

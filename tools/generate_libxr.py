@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 
 from libxr import generator_code_stm32
+from project_layout import USER
 
 
 def generate(project):
@@ -24,9 +25,9 @@ def generate(project):
     try:
         generator_code_stm32.generate(
             str(project / ".config.yaml"),
-            str(project / "User/app_main.cpp"),
+            str(project / USER / "app_main.cpp"),
             True,
-            str(project / "User/libxr_config.yaml"),
+            str(project / USER / "libxr_config.yaml"),
         )
     finally:
         generator_code_stm32._gpio_object_name = original_name

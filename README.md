@@ -25,8 +25,8 @@ IWDG 的 IOC 保留参考分频/重载值；LibXR 启动时根据名义超时重
 
 - `dm02_test.ioc` 是唯一根 IOC；生成的初始化文件在 `Core/Inc`、`Core/Src`。
 - 启动汇编为 `Core/Startup/startup_stm32h723vgtx.s`，链接脚本为 `STM32H723VGTX_FLASH.ld`。
-- `User/app_main.cpp`、`User/app_main.h`、`User/flash_map.hpp` 由固定版本生成工具生成；自定义内容仅放在 User Code 区。
-- `Modules/modules.yaml`、`xrobot.lock` 固定应用模块，`User/libxr_config.yaml` 固定生成器与硬件封装设置。
+- `User_File/4_Task/User/app_main.cpp`、`User_File/4_Task/User/app_main.h`、`User_File/4_Task/User/flash_map.hpp` 由固定版本生成工具生成；自定义内容仅放在 User Code 区。
+- `User_File/3_Modules/modules.yaml`、`xrobot.lock` 固定应用模块，`User_File/4_Task/User/libxr_config.yaml` 固定生成器与硬件封装设置。
 - LibXR 子模块固定为 `5161373dbe6d9d9fb1904d90e0ebd4344a44047a`；BuzzerAlarm 固定提交由 `xrobot.lock` 记录，不自动更新。
 
 参考 GPIO 标签包含双下划线。IOC 和 HAL 宏保持参考名称；`tools/generate_libxr.py` 在固定 libxr 6.0.1 的对象命名适配点合并连续下划线，保持其余标识符/冲突检查有效。例如 `BMI088_ACCEL__SPI_CS_Pin` 对应 LibXR 对象 `BMI088_ACCEL_SPI_CS`。不要直接运行未适配的 `libxr stm32 setup` 覆盖生成物，统一使用下方入口。
@@ -78,3 +78,7 @@ CI 使用同一 GPIO 名称适配入口，检查生成一致性及参考配置�
 `User_File`完整对应唯一参考的72个文件名/层级：22份算法原件、50份Driver/System/设备/任务适配。`ReferenceApplication`持有设备状态并接入现有LibXR后端；USB只有一个物理读者，终端和`q00/q11/r00/r11`调参由有界分流器处理。`ref`提供状态、IMU/加热、绘图、板载设备、GM6020和Flash维护命令，启动默认不运行IMU、加热、电机或Flash操作。
 
 功能清单、调用边界、命令及待实板验收项见 [使用说明](../../readme/框架/USER_FILE_README.md)。适配快照由`tools/check_reference_devices.py`校验；主机协议测试位于`tests/drivers`，HAL/LibXR替身通过不代表真实DMA、时序或外设通过。当前实测与限制只以集中状态为准。
+
+## 自定义目录入口
+
+Modules/User已移入User_File/3_Modules及4_Task/User。使用tools/xrobot_project.py运行官方CLI，完整生成使用tools/regenerate.py；仓内登记暂为空，旧ReferenceApplication装配仍保留。固定版本上游不原生支持此自定义布局。

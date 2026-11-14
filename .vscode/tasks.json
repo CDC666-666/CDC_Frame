@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "XRobot: Generate project modules",
+      "type": "process",
+      "command": "${workspaceFolder}/build/tooling-env/Scripts/python.exe",
+      "args": ["tools/xrobot_project.py", "gen"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
+    },
+    {
+      "label": "XRobot: Restore locked project modules",
+      "type": "process",
+      "command": "${workspaceFolder}/build/tooling-env/Scripts/python.exe",
+      "args": ["tools/xrobot_project.py", "setup", "--frozen"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
+    }
+  ]
+}

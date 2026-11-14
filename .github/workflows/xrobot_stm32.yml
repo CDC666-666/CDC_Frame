@@ -32,7 +32,7 @@ jobs:
       - name: Check generated LibXR integration
         run: |
           python tools/regenerate.py --libxr-only
-          git diff --exit-code -- User/app_main.cpp User/app_main.h User/flash_map.hpp User/libxr_config.yaml cmake/LibXR.CMake
+          git diff --exit-code -- User_File/4_Task/User/app_main.cpp User_File/4_Task/User/app_main.h User_File/4_Task/User/flash_map.hpp User_File/4_Task/User/libxr_config.yaml cmake/LibXR.CMake
           python tools/check_baseline.py
           python tools/check_algorithm_import.py
           python tools/check_reference_devices.py

@@ -22,7 +22,8 @@ def main():
     manifest = json.loads((project / "tools/reference_devices.json").read_text(encoding="utf-8"))
     expected = {entry["path"]: entry for entry in manifest["files"]}
     actual = {path.relative_to(root).as_posix() for path in root.rglob("*")
-              if path.is_file() and "1_Middleware/Algorithm/" not in path.relative_to(root).as_posix()}
+              if path.is_file() and not any(path.is_relative_to(root / folder)
+                  for folder in ("1_Middleware/Algorithm", "3_Modules", "4_Task/User"))}
     differences = [name for name in sorted(actual | expected.keys())
                    if name not in expected or name not in actual or
                    digest(root / name) != expected[name]["adapted_sha256"]]

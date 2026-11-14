@@ -10,6 +10,23 @@ import subprocess
 import sys
 
 from generate_libxr import generate
+from project_layout import USER
+
+
+def adapt_cmake(project):
+    """适配固定生成器的默认目录；输入工程根，保留官方生成与摘要检查。"""
+    path = project / "cmake/LibXR.CMake"
+    text = path.read_text(encoding="utf-8")
+    text = text.replace('set(XROBOT_MODULES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Modules")',
+                        '# Custom XRobot layout is integrated below without editing LibXR.')
+    text = text.replace('${CMAKE_CURRENT_SOURCE_DIR}/User/*.cpp',
+                        '${CMAKE_CURRENT_SOURCE_DIR}/' + USER.as_posix() + '/*.cpp')
+    text = text.replace('Core/Inc User)', 'Core/Inc ' + USER.as_posix() + ')')
+    marker = 'add_subdirectory("${LIBXR_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/LibXR")'
+    integration = 'include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/xrobot_layout.cmake")'
+    if integration not in text:
+        text = text.replace(marker, marker + '\n' + integration)
+    path.write_text(text, encoding="utf-8", newline="\n")
 
 
 def run(arguments, project, log=None):
@@ -164,8 +181,8 @@ def main():
     run([sys.executable, "-m", "libxr", "parse", "-d", str(project)], project)
     generate(project)
     run([sys.executable, "-m", "libxr", "stm32", "cmake", "-d", str(project)], project)
-    xrobot = Path(sys.executable).with_name("xrobot.exe" if os.name == "nt" else "xrobot")
-    command = [str(xrobot), "setup", "--frozen"]
+    adapt_cmake(project)
+    command = [sys.executable, str(project / "tools/xrobot_project.py"), "setup", "--frozen"]
     if args.offline:
         command.append("--offline")
     run(command, project)
