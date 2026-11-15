@@ -49,6 +49,11 @@ jobs:
           cmake -S tests/music -B build/music-tests -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.preset }}
           cmake --build build/music-tests --parallel 4
           ctest --test-dir build/music-tests --output-on-failure
+      - name: Run DT7 stream protocol tests on host
+        run: |
+          cmake -S tests/dt7 -B build/dt7-tests -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.preset }}
+          cmake --build build/dt7-tests --parallel 4
+          ctest --test-dir build/dt7-tests --output-on-failure
       - name: Build firmware image
         run: |
           cmake --preset ${{ matrix.preset }}

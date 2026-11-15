@@ -5,5 +5,11 @@ modules:
   - pwm: pwm_tim12_ch2
   - enabled: false
   - task_stack_depth: 2048
+- module: devices/Dt7
+  id: dt7
+  args:
+  - uart: uart5
+  - timeout_ms: 100
+  - task_stack_depth: 2048
 settings:
   monitor_sleep_ms: 1000

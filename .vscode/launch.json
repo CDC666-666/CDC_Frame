@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "MC02: DAPLink 附加调试（不烧录）",
+      "type": "cortex-debug",
+      "request": "attach",
+      "showDevDebugOutput": "raw",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/Debug/dm02_test.elf",
+      "servertype": "openocd",
+      "serverpath": "D:/Apps/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+      "gdbPath": "D:/Apps/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
+      "armToolchainPath": "D:/Apps/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin",
+      "configFiles": ["User_Config/daplink.cfg"],
+      "openOCDLaunchCommands": ["adapter speed 1000"],
+      "postAttachCommands": [
+        "set $dt7 = (Dt7*)&'XRobotMain(LibXR::PWM&, LibXR::UART&)::dt7'"
+      ],
+      "liveWatch": {
+        "enabled": true,
+        "samplesPerSecond": 4
+      }
+    }
+  ]
+}

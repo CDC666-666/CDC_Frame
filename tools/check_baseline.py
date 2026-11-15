@@ -25,6 +25,16 @@ def main():
 
     for key, value in expected["peripheral_config"].items():
         require(ioc.get(key) == value, f"Reference mismatch: {key}: {ioc.get(key)} != {value}")
+    # UART空闲时按NDTR取数据，不能把仍留在DMA FIFO中的字节当作已写入内存。
+    require(ioc.get("Dma.UART5_RX.4.FIFOMode") == "DMA_FIFOMODE_DISABLE",
+            "UART5 RX must use DMA direct mode for idle-position reads")
+    for key, value in (("PeriphDataAlignment", "DMA_PDATAALIGN_BYTE"),
+                       ("MemDataAlignment", "DMA_MDATAALIGN_BYTE")):
+        require(ioc.get("Dma.UART5_RX.4." + key) == value,
+                f"UART5 RX direct mode must use byte transfers: {key}")
+    uart_source = (project / "Core/Src/usart.c").read_text(encoding="utf-8")
+    require("hdma_uart5_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;" in uart_source,
+            "Generated UART5 RX DMA FIFO setting is stale")
     require(len(list(project.glob("*.ioc"))) == 1, "Expected one root IOC")
     require(ioc["ProjectManager.FirmwarePackage"] == "STM32Cube FW_H7 V1.13.0", "Firmware package changed")
     require(ioc["NVIC.TimeBaseIP"] == "TIM17", "HAL timebase must be TIM17")

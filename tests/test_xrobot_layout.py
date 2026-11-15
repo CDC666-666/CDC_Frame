@@ -72,11 +72,25 @@ class XRobotLayoutTest(unittest.TestCase):
     def test_describe_keeps_local_modules_separate_from_lock(self):
         """只读诊断识别仓内接口，且不把它们伪装成已锁外部仓库。"""
         result = describe(self.project)
-        self.assertEqual(len(result["local_modules"]), 1)
+        self.assertEqual({module["id"] for module in result["local_modules"]},
+                         {"tasks/RmMusic", "devices/Dt7"})
         self.assertEqual(len(result["lock"]["modules"]), 2)
-        self.assertEqual(len(result["modules"]), 3)
+        self.assertEqual(len(result["modules"]), 4)
         errors = [d for d in result["diagnostics"] if d["severity"] == "error"]
         self.assertEqual(errors, [])
+
+    def test_dt7_product_and_hardware(self):
+        """默认产品构造独立UART5接收器，minimal不实例化遥控器。"""
+        rendered = self.render(self.project.default_config)
+        self.assertIn("static Dt7 dt7(uart5, 100, 2048)", rendered)
+        self.assertNotIn("static Dt7", self.render(self.project.user / "minimal.yaml"))
+        with tempfile.TemporaryDirectory() as folder:
+            config = Path(folder) / "bad.yaml"
+            config.write_text(self.project.default_config.read_text(encoding="utf-8")
+                              .replace("- uart: uart5", "- uart: missing_uart"),
+                              encoding="utf-8")
+            with self.assertRaises(ValueError):
+                self.render(config)
 
     def test_local_path_cannot_escape_bsp(self):
         """仓内模块的新路径登记不能把BSP外文件引入生成和构建。"""

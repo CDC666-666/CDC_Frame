@@ -1,3 +1,5 @@
 modules:
 - id: tasks/RmMusic
   path: User_File/4_Task/rm_music
+- id: devices/Dt7
+  path: User_File/3_Modules/dt7

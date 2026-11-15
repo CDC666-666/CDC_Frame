@@ -2,7 +2,7 @@
 
 工程位于 `bsp-dev-mc02`，当前 CubeMX 工程及固件名称为 `dm02_test`。MCU 为 STM32H723VGT6；外设配置以指定的本地 `damiao_mc02_bsp-main/damiao_mc02_bsp-main/dm02_test` 为参考。
 
-底层配置和生成层已按参考对齐，保留 FreeRTOS、LibXR/XRobot、70份参考核心源码和22份原字节算法。按用户最新要求，frame-cdc四个运行模块已删除；当前应用为User_File/4_Task/rm_music，调用既有蜂鸣器组件上电播放一次用户提供音频的自动转录谱。算法仍有已记录且未修复的问题；编译和主机测试不代表实板验证。
+底层配置和生成层已按参考对齐，保留 FreeRTOS、LibXR/XRobot、70份参考核心源码和22份原字节算法。frame-cdc四个运行模块已删除；当前默认产品装配独立DT7/DR16输入模块及rm_music任务，音乐显式关闭。算法仍有已记录且未修复的问题；编译和主机测试不代表实板验证。
 
 ## 配置与运行入口
 
@@ -20,6 +20,8 @@
 启动链为 `main → defaultTask → app_main → XROBOT_MAIN`。产品YAML构造RmMusic，独占TIM12 CH2蜂鸣器；enabled: true播放一次，false静音，改后需重新生成/编译/烧录。有效谱使用2048 B低优先级线程，结束后静音并永久阻塞；禁用或缺谱时不创建播放线程。BuzzerAlarm不再实例化，避免其自带开机音绕过开关；相应自定义致命错误报警也不再安装。USB终端恢复官方自动线程，旧ref诊断/演示/采样/Flash后台不再运行。参考TIM4/7/8只初始化，PC13/PC14/PC15按参考初始化为低电平。
 
 IWDG 的 IOC 保留参考分频/重载值；LibXR 启动时根据名义超时重新计算等效寄存器配置并关闭窗口约束。基础周期喂狗不等于业务任务健康监测，实际超时还受 LSI 频率影响。
+
+`devices/Dt7`位于`User_File/3_Modules/dt7`，默认实例`dt7`绑定板载P6的UART5/PD2，沿用100000/EVEN/8有效数据位/2停止位。HIGH线程每1ms处理字节流，两帧确认同步；100ms无有效输入时通道清零、拨杆UNKNOWN、online=false。提供线程安全`GetSnapshot()`副本，四通道为−1..1、拨杆为1/3/2。minimal产品不实例化；接线、Cortex-Debug/DAPLink附加配置与Watch表达式见[DT7验收说明](../../readme/框架/DT7_DR16.md)。DBUS无CRC，实板丢包和失效恢复仍须单独验证。
 
 ## 文件与生成边界
 
@@ -75,7 +77,7 @@ CI 使用同一 GPIO 名称适配入口，检查生成一致性及参考配置�
 
 ## 参考设备与驱动
 
-`User_File`保留唯一参考的70个核心文件名/层级：22份算法原件、48份Driver/System/设备适配；原Task两文件按用户要求删除并在来源清单中单独记录。当前仅rm_music经YAML和官方生成入口装配；USB由官方终端线程读取。旧ref诊断、调参分流、IMU/加热、绘图、电机示例和Flash后台已撤下，相关设备/驱动作为库保留，后续按需求重新装配。
+`User_File`保留唯一参考的70个核心文件名/层级：22份算法原件、48份Driver/System/设备适配；原Task两文件按用户要求删除并在来源清单中单独记录。当前rm_music和devices/Dt7经YAML和官方生成入口装配；USB由官方终端线程读取。旧ref诊断、调参分流、IMU/加热、绘图、电机示例和Flash后台已撤下，相关设备/驱动作为库保留，后续按需求重新装配。
 
 功能清单、调用边界、命令及待实板验收项见 [使用说明](../../readme/框架/USER_FILE_README.md)。适配快照由`tools/check_reference_devices.py`校验；主机协议测试位于`tests/drivers`，HAL/LibXR替身通过不代表真实DMA、时序或外设通过。当前实测与限制只以集中状态为准。
 
